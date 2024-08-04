@@ -1,0 +1,77 @@
+import type { Updatable } from '../Updatable';
+
+export enum Keys {
+    Up = 'ArrowUp',
+    Down = 'ArrowDown',
+    Left = 'ArrowLeft',
+    Right = 'ArrowRight',
+    Space = 'Space',
+    LShift = 'ShiftLeft',
+}
+
+export interface KeyState {
+    alreadyPressed: boolean;
+    code: Keys;
+    isReleased: boolean;
+}
+
+export class Keyboard implements Updatable {
+    private readonly state: Map<Keys, KeyState> = new Map<Keys, KeyState>();
+
+    constructor() {
+        window.addEventListener('keydown', (event: KeyboardEvent) => this.handleKeyDown(event));
+        window.addEventListener('keyup', (event: KeyboardEvent) => this.handleKeyUp(event));
+    }
+
+    isKeyDown(key: Keys): boolean {
+        const state = this.state.get(key);
+        return this.state.has(key) && !state!.isReleased;
+    }
+
+    isKeyPressed(key: Keys): boolean {
+        const state = this.state.get(key);
+        return this.state.has(key) && !state!.isReleased && !state!.alreadyPressed;
+    }
+
+    isKeyReleased(key: Keys): boolean {
+        const state = this.state.get(key);
+        return this.state.has(key) && state!.isReleased;
+    }
+
+    update(): void {
+        this.state.forEach((_, key) => {
+            const currentState = this.state.get(key);
+
+            if (!currentState) {
+                return;
+            }
+
+            currentState.alreadyPressed = true;
+
+            if (currentState.isReleased) {
+                this.state.delete(key);
+            }
+        });
+    }
+
+    private handleKeyDown(event: KeyboardEvent): void {
+        const key = event.code as Keys;
+
+        if (!this.state.has(key)) {
+            this.state.set(key, {
+                alreadyPressed: false,
+                code: key,
+                isReleased: false,
+            });
+        }
+    }
+
+    private handleKeyUp(event: KeyboardEvent): void {
+        const key = event.code as Keys;
+        const currentState = this.state.get(key);
+
+        if (currentState) {
+            currentState.isReleased = true;
+        }
+    }
+}
