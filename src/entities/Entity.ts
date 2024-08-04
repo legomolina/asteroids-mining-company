@@ -1,5 +1,5 @@
 import { Container, type ContainerChild, type Renderer, Sprite, Texture, type Ticker } from 'pixi.js';
-import type { Updatable } from '../../core/Updatable';
+import type { Updatable } from '../core/Updatable';
 
 export abstract class Entity<T extends ContainerChild> extends Container<T> implements Updatable {
     protected texture?: Texture;

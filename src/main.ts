@@ -3,6 +3,6 @@ import './math/Utils';
 
 const game = new AsteroidsGame();
 
-await game.init();
-
-game.setDebug(true);
+game.init().then(() => {
+    game.setDebug(true);
+});

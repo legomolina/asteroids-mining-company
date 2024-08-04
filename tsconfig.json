@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "inlineSources": false,
     "isolatedModules": true,
-    "module": "NodeNext",
+    "module": "preserve",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
     "noEmit": true,
