@@ -40,9 +40,6 @@ export class AsteroidManager extends Container implements Updatable {
 
             await asteroid.loadContent();
 
-            asteroid.direction = Math.random() * Math.PI * 2;
-            asteroid.speed = 2 + Math.random();
-
             asteroid.x = Math.random() * this.renderer.screen.width;
             asteroid.y = Math.random() * this.renderer.screen.height;
 
@@ -51,32 +48,9 @@ export class AsteroidManager extends Container implements Updatable {
         }
     }
 
-    update({ deltaTime }: Ticker): void {
-        const stagePadding = 100;
-        const boundWidth = this.renderer.screen.width + stagePadding * 2;
-        const boundHeight = this.renderer.screen.height + stagePadding * 2;
-
+    update(ticker: Ticker): void {
         this.asteroids.forEach((asteroid) => {
-            asteroid.rotation = -asteroid.direction - Math.PI / 2;
-
-            asteroid.x += Math.sin(asteroid.direction) * asteroid.speed * deltaTime;
-            asteroid.y += Math.cos(asteroid.direction) * asteroid.speed * deltaTime;
-
-            if (asteroid.x < -stagePadding) {
-                asteroid.x += boundWidth;
-            }
-
-            if (asteroid.x > this.renderer.screen.width + stagePadding) {
-                asteroid.x -= boundWidth;
-            }
-
-            if (asteroid.y < -stagePadding) {
-                asteroid.y += boundHeight;
-            }
-
-            if (asteroid.y > this.renderer.screen.height + stagePadding) {
-                asteroid.y -= boundHeight;
-            }
+            asteroid.update(ticker);
         });
     }
 }

@@ -16,7 +16,7 @@ export class Player extends Entity<Sprite> {
     private direction: Vector2 = Vector2.zero;
     private inertia = .007;
     private maxSpeed = 8;
-    private rotationSpeed: number = 2;
+    private rotationSpeed: number = 5;
 
     get idleTexture(): Texture {
         return this.spritesheet.textures['player_idle']!;
@@ -43,7 +43,7 @@ export class Player extends Entity<Sprite> {
     }
 
     update(ticker: Ticker): void {
-        const rotation = this.getPlayerRotationDirection();
+        const rotation = this.getPlayerRotationDirection(ticker.deltaTime);
         const direction = this.getPlayerMoveDirection();
 
         this.direction = direction;
@@ -56,15 +56,15 @@ export class Player extends Entity<Sprite> {
         this.sprite!.texture = this.isThrusterActive ? this.thrustTexture : this.idleTexture;
     }
 
-    private getPlayerRotationDirection(): number {
+    private getPlayerRotationDirection(deltaTime: number): number {
         let rotation = this.directionAngle;
 
         if (this.input.keyboard.isKeyDown(Keys.Right)) {
-            rotation += this.rotationSpeed;
+            rotation += this.rotationSpeed * deltaTime;
         }
 
         if (this.input.keyboard.isKeyDown(Keys.Left)) {
-            rotation -= this.rotationSpeed;
+            rotation -= this.rotationSpeed * deltaTime;
         }
 
         return rotation;
