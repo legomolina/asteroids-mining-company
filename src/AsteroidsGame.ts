@@ -13,13 +13,15 @@ export class AsteroidsGame extends Game {
         super('Asteroids: Mining CO.');
     }
 
-    protected async initialized(): Promise<void> {
+    protected async initialize(): Promise<void> {
         this.asteroidManager = new AsteroidManager(this.renderer);
         this.collisionsManager = new CollisionManager();
         this.player = new Player(this.renderer);
     }
 
     protected async loadContent(): Promise<void> {
+        await this.player.initialize();
+
         await this.player.loadContent();
         await this.asteroidManager.loadContent();
 
@@ -34,8 +36,9 @@ export class AsteroidsGame extends Game {
     }
 
     update(ticker: Ticker): void {
-        this.collisionsManager.update();
-        this.player.update(ticker);
         this.asteroidManager.update(ticker);
+        this.collisionsManager.update();
+        this.debugManager.update();
+        this.player.update(ticker);
     }
 }

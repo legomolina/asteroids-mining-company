@@ -1,13 +1,14 @@
 import { Application, type Container, type ContainerChild, type Renderer, Text, Ticker } from 'pixi.js';
 import type { Updatable } from './Updatable';
 import { InputManager } from '../managers/InputManager';
+import { DebugManager } from '../managers/DebugManager';
 
 export abstract class Game implements Updatable {
     private readonly app: Application;
 
-    private isDebugging: boolean = false;
     private fpsText?: Text;
 
+    protected readonly debugManager = DebugManager.instance;
     protected readonly inputManager = InputManager.instance;
 
     protected get container(): Container<ContainerChild> {
@@ -26,16 +27,13 @@ export abstract class Game implements Updatable {
         document.title = name;
 
         this.app = new Application();
-    }
-
-    setDebug(debug: boolean): void {
-        this.isDebugging = debug;
-
-        if (this.isDebugging) {
-            this.addFpsCounterText();
-        } else {
-            this.removeFpsCounterText();
-        }
+        this.debugManager.on('debugChange', (isDebugging: boolean) => {
+            if (isDebugging) {
+                this.addFpsCounterText();
+            } else {
+                this.removeFpsCounterText();
+            }
+        });
     }
 
     async init(): Promise<void> {
@@ -46,7 +44,7 @@ export abstract class Game implements Updatable {
 
         document.body.appendChild(this.app.canvas);
 
-        await this.initialized();
+        await this.initialize();
 
         await this.loadContent();
 
@@ -55,9 +53,14 @@ export abstract class Game implements Updatable {
         this.app.ticker.add(() => this.inputManager.update());
     }
 
-    protected abstract initialized(): Promise<void>;
-    protected abstract loadContent(): Promise<void>;
+    setDebug(debug: boolean): void {
+        this.debugManager.debug = debug;
+    }
+
     abstract update(ticker: Ticker): void;
+
+    protected abstract initialize(): Promise<void>;
+    protected abstract loadContent(): Promise<void>;
 
     private addFpsCounterText(): void {
         this.fpsText = new Text({

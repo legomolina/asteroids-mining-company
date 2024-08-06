@@ -1,19 +1,17 @@
 import {
     Assets,
-    type ContainerChild,
-    Graphics, Point, Polygon,
+    Point, Polygon,
     Sprite,
     Spritesheet,
     type Texture,
     type Ticker,
 } from 'pixi.js';
-import { Entity } from '../Entity';
 import { InputManager } from '../../managers/InputManager';
 import { Vector2 } from '../../math/Vector2';
 import { Keys } from '../../core/input/Keyboard';
-import type { Collidable } from '../Collidable';
+import { Collidable } from '../Collidable';
 
-export class Player extends Entity<ContainerChild> implements Collidable {
+export class Player extends Collidable {
     private static readonly ATLAS_FILE = '/assets/player/data.json';
 
     private isThrusterActive = false;
@@ -27,7 +25,6 @@ export class Player extends Entity<ContainerChild> implements Collidable {
     private maxSpeed = 8;
     private rotationSpeed: number = 5;
 
-    private hitBoxGraphics = new Graphics();
     private isColliding = false;
     hitBox!: Polygon;
 
@@ -52,19 +49,13 @@ export class Player extends Entity<ContainerChild> implements Collidable {
 
         this.sprite.anchor.set(0.5);
 
-        const polygonPoints = [
-            new Point(-12, -20),
-            new Point(12, -20),
-            new Point(12, 12),
-            new Point(-12, 12),
-        ];
+        this.hitBox = this.createHitBox();
 
-        this.hitBox = new Polygon(polygonPoints);
-
-        this.addChild(this.sprite, this.hitBoxGraphics);
+        this.addChild(this.sprite);
     }
 
     update(ticker: Ticker): void {
+        super.update(ticker);
         const rotation = this.getPlayerRotationDirection(ticker.deltaTime);
         const direction = this.getPlayerMoveDirection();
 
@@ -77,41 +68,19 @@ export class Player extends Entity<ContainerChild> implements Collidable {
         this.sprite!.angle = this.directionAngle;
         this.sprite!.texture = this.isThrusterActive ? this.thrustTexture : this.idleTexture;
 
-        const rotate = (point: Point, angle: number): Point => {
-            return new Point(point.x * Math.cos(angle) - point.y * Math.sin(angle), point.x * Math.sin(angle) + point.y * Math.cos(angle));
-        };
+        this.hitBox = this.createHitBox();
 
-        const polygonPoints = [
-            rotate(new Point(-12, -20), this.directionAngle * Math.PI / 180),
-            rotate(new Point(12, -20), this.directionAngle * Math.PI / 180),
-            rotate(new Point(12, 12), this.directionAngle * Math.PI / 180),
-            rotate(new Point(-12, 12), this.directionAngle * Math.PI / 180),
-        ];
-
-        this.hitBox = new Polygon(polygonPoints);
-
-        this.hitBoxGraphics
-            .clear()
-            .poly(polygonPoints)
-            .stroke(this.isColliding ? '#00FF00' : '#FF0000');
+        if (this.isColliding) {
+            this.debugColor = '#00FF00';
+        } else {
+            this.debugColor = '#FF0000';
+        }
 
         this.isColliding = false;
     }
 
     onCollision(other: Collidable): void {
         this.isColliding = true;
-    }
-
-    toWorldHitBox(): Polygon {
-        const worldPolygon = new Polygon();
-
-        for (let i = 0; i < this.hitBox.points.length; i += 2) {
-            const point = this.toGlobal(new Point(this.hitBox.points[i], this.hitBox.points[i + 1]));
-
-            worldPolygon.points.push(point.x, point.y);
-        }
-
-        return worldPolygon;
     }
 
     private getPlayerRotationDirection(deltaTime: number): number {
@@ -131,17 +100,18 @@ export class Player extends Entity<ContainerChild> implements Collidable {
     private getPlayerMoveDirection(): Vector2 {
         let direction = Vector2.zero;
 
-        if (this.input.keyboard.isKeyDown(Keys.Up)) {
+        if (this.input.keyboard.isKeyDown(Keys.Up)) { // Handle thruster forward
             direction = new Vector2(0, -this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = true;
-        } else if (this.input.keyboard.isKeyDown(Keys.Down)) {
+
+        } else if (this.input.keyboard.isKeyDown(Keys.Down)) { // Handle thruster backward
             direction = new Vector2(0, this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = false;
-        } else if (this.direction.x !== 0 || this.direction.y !== 0) {
+        } else if (this.direction.x !== 0 || this.direction.y !== 0) { // Handle inertia
             direction = this.direction.sum(this.direction.scalar(-this.inertia));
             this.isThrusterActive = false;
         }
@@ -158,5 +128,20 @@ export class Player extends Entity<ContainerChild> implements Collidable {
         clampedPosition.y = Math.clamp(clampedPosition.y, this.height / 2, this.renderer.screen.height - this.height / 2);
 
         this.position = clampedPosition.toPoint();
+    }
+
+    private createHitBox(): Polygon {
+        const rotate = (point: Point, angle: number): Point => {
+            return new Point(point.x * Math.cos(angle) - point.y * Math.sin(angle), point.x * Math.sin(angle) + point.y * Math.cos(angle));
+        };
+
+        const polygonPoints = [
+            rotate(new Point(-12, -20), this.directionAngle * Math.PI / 180),
+            rotate(new Point(12, -20), this.directionAngle * Math.PI / 180),
+            rotate(new Point(12, 12), this.directionAngle * Math.PI / 180),
+            rotate(new Point(-12, 12), this.directionAngle * Math.PI / 180),
+        ];
+
+        return new Polygon(polygonPoints);
     }
 }

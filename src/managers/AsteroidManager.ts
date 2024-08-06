@@ -38,6 +38,7 @@ export class AsteroidManager extends Container implements Updatable {
             const texture = this.getRandomTexture();
             const asteroid = new Asteroid(this.renderer, texture, this.getAsteroidSize(texture.label!));
 
+            await asteroid.initialize();
             await asteroid.loadContent();
 
             asteroid.x = Math.random() * this.renderer.screen.width;

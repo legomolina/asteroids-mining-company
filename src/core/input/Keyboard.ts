@@ -7,10 +7,10 @@ export enum Keys {
     Right = 'ArrowRight',
     Space = 'Space',
     LShift = 'ShiftLeft',
+    F3 = 'F3',
 }
 
 export interface KeyState {
-    alreadyPressed: boolean;
     code: Keys;
     isReleased: boolean;
 }
@@ -28,11 +28,6 @@ export class Keyboard implements Updatable {
         return this.state.has(key) && !state!.isReleased;
     }
 
-    isKeyPressed(key: Keys): boolean {
-        const state = this.state.get(key);
-        return this.state.has(key) && !state!.isReleased && !state!.alreadyPressed;
-    }
-
     isKeyReleased(key: Keys): boolean {
         const state = this.state.get(key);
         return this.state.has(key) && state!.isReleased;
@@ -46,8 +41,6 @@ export class Keyboard implements Updatable {
                 return;
             }
 
-            currentState.alreadyPressed = true;
-
             if (currentState.isReleased) {
                 this.state.delete(key);
             }
@@ -55,11 +48,12 @@ export class Keyboard implements Updatable {
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
+        event.preventDefault();
+
         const key = event.code as Keys;
 
         if (!this.state.has(key)) {
             this.state.set(key, {
-                alreadyPressed: false,
                 code: key,
                 isReleased: false,
             });
@@ -67,6 +61,8 @@ export class Keyboard implements Updatable {
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
+        event.preventDefault();
+
         const key = event.code as Keys;
         const currentState = this.state.get(key);
 
