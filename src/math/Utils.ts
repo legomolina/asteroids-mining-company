@@ -10,5 +10,5 @@ Math.clamp = (value: number, min: number, max: number): number => {
 };
 
 Math.randomRange = (min: number, max: number): number => {
-    return Math.round(Math.random() * (max - min) + min);
+    return Math.floor(Math.random() * (max - min) + min);
 };

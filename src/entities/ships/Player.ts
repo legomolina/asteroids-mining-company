@@ -1,10 +1,19 @@
-import { Assets, Sprite, Spritesheet, type Texture, type Ticker } from 'pixi.js';
+import {
+    Assets,
+    type ContainerChild,
+    Graphics, Point, Polygon,
+    Sprite,
+    Spritesheet,
+    type Texture,
+    type Ticker,
+} from 'pixi.js';
 import { Entity } from '../Entity';
 import { InputManager } from '../../managers/InputManager';
 import { Vector2 } from '../../math/Vector2';
 import { Keys } from '../../core/input/Keyboard';
+import type { Collidable } from '../Collidable';
 
-export class Player extends Entity<Sprite> {
+export class Player extends Entity<ContainerChild> implements Collidable {
     private static readonly ATLAS_FILE = '/assets/player/data.json';
 
     private isThrusterActive = false;
@@ -17,6 +26,10 @@ export class Player extends Entity<Sprite> {
     private inertia = .007;
     private maxSpeed = 8;
     private rotationSpeed: number = 5;
+
+    private hitBoxGraphics = new Graphics();
+    private isColliding = false;
+    hitBox!: Polygon;
 
     get idleTexture(): Texture {
         return this.spritesheet.textures['player_idle']!;
@@ -39,7 +52,16 @@ export class Player extends Entity<Sprite> {
 
         this.sprite.anchor.set(0.5);
 
-        this.addChild(this.sprite);
+        const polygonPoints = [
+            new Point(-12, -20),
+            new Point(12, -20),
+            new Point(12, 12),
+            new Point(-12, 12),
+        ];
+
+        this.hitBox = new Polygon(polygonPoints);
+
+        this.addChild(this.sprite, this.hitBoxGraphics);
     }
 
     update(ticker: Ticker): void {
@@ -54,6 +76,42 @@ export class Player extends Entity<Sprite> {
 
         this.sprite!.angle = this.directionAngle;
         this.sprite!.texture = this.isThrusterActive ? this.thrustTexture : this.idleTexture;
+
+        const rotate = (point: Point, angle: number): Point => {
+            return new Point(point.x * Math.cos(angle) - point.y * Math.sin(angle), point.x * Math.sin(angle) + point.y * Math.cos(angle));
+        };
+
+        const polygonPoints = [
+            rotate(new Point(-12, -20), this.directionAngle * Math.PI / 180),
+            rotate(new Point(12, -20), this.directionAngle * Math.PI / 180),
+            rotate(new Point(12, 12), this.directionAngle * Math.PI / 180),
+            rotate(new Point(-12, 12), this.directionAngle * Math.PI / 180),
+        ];
+
+        this.hitBox = new Polygon(polygonPoints);
+
+        this.hitBoxGraphics
+            .clear()
+            .poly(polygonPoints)
+            .stroke(this.isColliding ? '#00FF00' : '#FF0000');
+
+        this.isColliding = false;
+    }
+
+    onCollision(other: Collidable): void {
+        this.isColliding = true;
+    }
+
+    toWorldHitBox(): Polygon {
+        const worldPolygon = new Polygon();
+
+        for (let i = 0; i < this.hitBox.points.length; i += 2) {
+            const point = this.toGlobal(new Point(this.hitBox.points[i], this.hitBox.points[i + 1]));
+
+            worldPolygon.points.push(point.x, point.y);
+        }
+
+        return worldPolygon;
     }
 
     private getPlayerRotationDirection(deltaTime: number): number {

@@ -2,9 +2,11 @@ import type { Ticker } from 'pixi.js';
 import { Game } from './core/Game';
 import { Player } from './entities/ships/Player';
 import { AsteroidManager } from './managers/AsteroidManager';
+import { CollisionManager } from './managers/CollisionManager';
 
 export class AsteroidsGame extends Game {
     private asteroidManager!: AsteroidManager;
+    private collisionsManager!: CollisionManager;
     private player!: Player;
 
     constructor() {
@@ -13,6 +15,7 @@ export class AsteroidsGame extends Game {
 
     protected async initialized(): Promise<void> {
         this.asteroidManager = new AsteroidManager(this.renderer);
+        this.collisionsManager = new CollisionManager();
         this.player = new Player(this.renderer);
     }
 
@@ -25,10 +28,13 @@ export class AsteroidsGame extends Game {
 
         await this.asteroidManager.generateAsteroids(20);
 
+        this.collisionsManager.insert(this.player, ...this.asteroidManager.asteroids);
+
         this.container.addChild(this.player, this.asteroidManager);
     }
 
     update(ticker: Ticker): void {
+        this.collisionsManager.update();
         this.player.update(ticker);
         this.asteroidManager.update(ticker);
     }

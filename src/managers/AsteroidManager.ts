@@ -1,11 +1,11 @@
 import { Assets, Container, type Renderer, Spritesheet, type Texture, type Ticker } from 'pixi.js';
-import { Asteroid } from '../entities/asteroids/Asteroid';
+import { Asteroid, AsteroidSize } from '../entities/asteroids/Asteroid';
 import type { Updatable } from '../core/Updatable';
 
 export class AsteroidManager extends Container implements Updatable {
     private static readonly ATLAS_FILE = '/assets/asteroids/data.json';
 
-    private asteroids: Asteroid[] = [];
+    asteroids: Asteroid[] = [];
     private spritesheet!: Spritesheet;
 
     constructor(private renderer: Renderer) {
@@ -36,7 +36,7 @@ export class AsteroidManager extends Container implements Updatable {
     async generateAsteroids(count: number): Promise<void> {
         for (let i = 0; i < count; i++) {
             const texture = this.getRandomTexture();
-            const asteroid = new Asteroid(this.renderer, texture);
+            const asteroid = new Asteroid(this.renderer, texture, this.getAsteroidSize(texture.label!));
 
             await asteroid.loadContent();
 
@@ -52,5 +52,21 @@ export class AsteroidManager extends Container implements Updatable {
         this.asteroids.forEach((asteroid) => {
             asteroid.update(ticker);
         });
+    }
+
+    private getAsteroidSize(textureName: string): AsteroidSize {
+        if (textureName.includes('small')) {
+            return AsteroidSize.SMALL;
+        }
+
+        if (textureName.includes('medium')) {
+            return AsteroidSize.MEDIUM;
+        }
+
+        if (textureName.includes('large')) {
+            return AsteroidSize.LARGE;
+        }
+
+        return AsteroidSize.SMALL;
     }
 }
