@@ -5,11 +5,15 @@ import { Container, type Polygon } from 'pixi.js';
 export class CollisionManager extends Container implements Updatable {
     private collidables: Collidable[] = [];
 
-    insert(...collidable: Collidable[]) {
+    insert(...collidable: Collidable[]): void {
         this.collidables.push(...collidable);
     }
 
-    update() {
+    remove(collidable: Collidable): void {
+        this.collidables = this.collidables.filter((c) => c !== collidable);
+    }
+
+    update(): void {
         this.collidables.forEach((collidable: Collidable) => {
             for (const c of this.collidables) {
                 if (c === collidable) {

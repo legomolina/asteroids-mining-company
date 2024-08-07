@@ -12,6 +12,7 @@ export abstract class Entity extends Container implements Updatable {
     constructor(protected renderer: Renderer) {
         super();
 
+        this.debug = this.debugManager.debug;
         this.debugManager.on('debugChange', (isDebugging: boolean): void => {
             this.debug = isDebugging;
         });

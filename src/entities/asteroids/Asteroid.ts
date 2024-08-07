@@ -1,6 +1,7 @@
 import { Point, Polygon, type Renderer, Sprite, type Texture, type Ticker } from 'pixi.js';
 import { Vector2 } from '../../math/Vector2';
 import { Collidable } from '../Collidable';
+import { Bullet } from '../ships/Bullet';
 
 export enum AsteroidSize {
     SMALL,
@@ -11,6 +12,7 @@ export enum AsteroidSize {
 export class Asteroid extends Collidable {
     private rotationSpeed: number = Math.randomRange(-2, 2);
     private speed: number = 2 + Math.random();
+    private health: number = 1;
 
     protected hitBox!: Polygon;
 
@@ -18,6 +20,18 @@ export class Asteroid extends Collidable {
         super(renderer);
 
         this.texture = texture;
+
+        this.label = {
+            [AsteroidSize.SMALL]: 'asteroid-small',
+            [AsteroidSize.MEDIUM]: 'asteroid-medium',
+            [AsteroidSize.LARGE]: 'asteroid-large',
+        }[size];
+
+        this.health = {
+            [AsteroidSize.SMALL]: 1,
+            [AsteroidSize.MEDIUM]: 2,
+            [AsteroidSize.LARGE]: 3,
+        }[size];
     }
 
     async loadContent(): Promise<void> {
@@ -30,8 +44,14 @@ export class Asteroid extends Collidable {
         this.addChild(this.sprite);
     }
 
-    onCollision(_: Collidable): void {
+    onCollision(other: Collidable): void {
+        if (!(other instanceof Bullet)) {
+            return;
+        }
 
+        if (--this.health <= 0) {
+            this.emit('destroy');
+        }
     }
 
     update(ticker: Ticker) {

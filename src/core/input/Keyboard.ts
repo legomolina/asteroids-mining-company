@@ -48,7 +48,9 @@ export class Keyboard implements Updatable {
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
-        event.preventDefault();
+        if (event.key === 'F3') {
+            event.preventDefault();
+        }
 
         const key = event.code as Keys;
 

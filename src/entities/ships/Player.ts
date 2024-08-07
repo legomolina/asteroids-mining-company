@@ -1,6 +1,7 @@
 import {
     Assets,
-    Point, Polygon,
+    Point,
+    Polygon, type Renderer,
     Sprite,
     Spritesheet,
     type Texture,
@@ -10,22 +11,28 @@ import { InputManager } from '../../managers/InputManager';
 import { Vector2 } from '../../math/Vector2';
 import { Keys } from '../../core/input/Keyboard';
 import { Collidable } from '../Collidable';
+import { Bullet } from './Bullet';
+import { rotatePoint } from '../../math/Utils';
+import type { CollisionManager } from '../../managers/CollisionManager';
+import { Asteroid } from '../asteroids/Asteroid';
 
 export class Player extends Collidable {
     private static readonly ATLAS_FILE = '/assets/player/data.json';
 
-    private isThrusterActive = false;
-    private input = InputManager.instance;
-    private spritesheet!: Spritesheet;
-
     private acceleration = .2;
-    private directionAngle: number = 0;
-    private direction: Vector2 = Vector2.zero;
     private inertia = .007;
     private maxSpeed = 8;
     private rotationSpeed: number = 5;
 
+    private bullets: Bullet[] = [];
+    private direction: Vector2 = Vector2.zero;
+    private directionAngle: number = 0;
+    private spritePosition = new Point(0, 0);
     private isColliding = false;
+    private isThrusterActive = false;
+    private input = InputManager.instance;
+    private spritesheet!: Spritesheet;
+
     hitBox!: Polygon;
 
     get idleTexture(): Texture {
@@ -34,6 +41,12 @@ export class Player extends Collidable {
 
     get thrustTexture(): Texture {
         return this.spritesheet.textures['player_thrust']!;
+    }
+
+    constructor(renderer: Renderer, private collisionManager: CollisionManager) {
+        super(renderer);
+
+        this.label = 'player';
     }
 
     async loadContent(): Promise<void> {
@@ -49,6 +62,8 @@ export class Player extends Collidable {
 
         this.sprite.anchor.set(0.5);
 
+        this.spritePosition = new Point(this.renderer.screen.width / 2, this.renderer.screen.height / 2);
+
         this.hitBox = this.createHitBox();
 
         this.addChild(this.sprite);
@@ -56,8 +71,11 @@ export class Player extends Collidable {
 
     update(ticker: Ticker): void {
         super.update(ticker);
+
         const rotation = this.getPlayerRotationDirection(ticker.deltaTime);
         const direction = this.getPlayerMoveDirection();
+
+        this.getPlayerShooting();
 
         this.direction = direction;
         this.directionAngle = rotation;
@@ -77,10 +95,17 @@ export class Player extends Collidable {
         }
 
         this.isColliding = false;
+
+        this.bullets.forEach((bullet: Bullet) => {
+            bullet.update(ticker);
+        });
     }
 
+     
     onCollision(other: Collidable): void {
-        this.isColliding = true;
+        if (other instanceof Asteroid) {
+            this.isColliding = true;
+        }
     }
 
     private getPlayerRotationDirection(deltaTime: number): number {
@@ -122,24 +147,43 @@ export class Player extends Collidable {
         return direction;
     }
 
-    private moveTo(velocity: Vector2): void {
-        const clampedPosition: Vector2 = new Vector2(this.x, this.y).sum(velocity);
-        clampedPosition.x = Math.clamp(clampedPosition.x, this.width / 2, this.renderer.screen.width - this.width / 2);
-        clampedPosition.y = Math.clamp(clampedPosition.y, this.height / 2, this.renderer.screen.height - this.height / 2);
+    private async getPlayerShooting(): Promise<void> {
+        if (this.input.keyboard.isKeyReleased(Keys.Space)) {
+            const bullet = new Bullet(this.renderer);
 
-        this.position = clampedPosition.toPoint();
+            await bullet.initialize();
+            await bullet.loadContent();
+
+            bullet.position = rotatePoint(new Point(this.spritePosition.x, this.spritePosition.y - 25), this.directionAngle * Math.PI / 180, this.spritePosition);
+            bullet.angle = this.directionAngle;
+
+            bullet.once('destroy', () => {
+                this.removeChild(bullet);
+                this.collisionManager.remove(bullet);
+                this.bullets = this.bullets.filter((b) => b !== bullet);
+            });
+
+            this.addChild(bullet);
+            this.collisionManager.insert(bullet);
+            this.bullets.push(bullet);
+        }
+    }
+
+    private moveTo(velocity: Vector2): void {
+        const clampedPosition: Vector2 = new Vector2(this.spritePosition.x, this.spritePosition.y).sum(velocity);
+        clampedPosition.x = Math.clamp(clampedPosition.x, this.sprite!.width / 2, this.renderer.screen.width - this.sprite!.width / 2);
+        clampedPosition.y = Math.clamp(clampedPosition.y, this.sprite!.height / 2, this.renderer.screen.height - this.sprite!.height / 2);
+
+        this.spritePosition = clampedPosition.toPoint();
+        this.sprite!.position = this.spritePosition;
     }
 
     private createHitBox(): Polygon {
-        const rotate = (point: Point, angle: number): Point => {
-            return new Point(point.x * Math.cos(angle) - point.y * Math.sin(angle), point.x * Math.sin(angle) + point.y * Math.cos(angle));
-        };
-
         const polygonPoints = [
-            rotate(new Point(-12, -20), this.directionAngle * Math.PI / 180),
-            rotate(new Point(12, -20), this.directionAngle * Math.PI / 180),
-            rotate(new Point(12, 12), this.directionAngle * Math.PI / 180),
-            rotate(new Point(-12, 12), this.directionAngle * Math.PI / 180),
+            rotatePoint(new Point(this.sprite!.x - 12, this.sprite!.y - 20), this.directionAngle * Math.PI / 180, this.spritePosition),
+            rotatePoint(new Point(this.sprite!.x + 12, this.sprite!.y - 20), this.directionAngle * Math.PI / 180, this.spritePosition),
+            rotatePoint(new Point(this.sprite!.x + 12, this.sprite!.y + 12), this.directionAngle * Math.PI / 180, this.spritePosition),
+            rotatePoint(new Point(this.sprite!.x - 12, this.sprite!.y + 12), this.directionAngle * Math.PI / 180, this.spritePosition),
         ];
 
         return new Polygon(polygonPoints);

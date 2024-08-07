@@ -1,6 +1,7 @@
 import { Assets, Container, type Renderer, Spritesheet, type Texture, type Ticker } from 'pixi.js';
 import { Asteroid, AsteroidSize } from '../entities/asteroids/Asteroid';
 import type { Updatable } from '../core/Updatable';
+import type { CollisionManager } from './CollisionManager';
 
 export class AsteroidManager extends Container implements Updatable {
     private static readonly ATLAS_FILE = '/assets/asteroids/data.json';
@@ -8,7 +9,7 @@ export class AsteroidManager extends Container implements Updatable {
     asteroids: Asteroid[] = [];
     private spritesheet!: Spritesheet;
 
-    constructor(private renderer: Renderer) {
+    constructor(private renderer: Renderer, private collisionManager: CollisionManager) {
         super();
     }
 
@@ -44,7 +45,16 @@ export class AsteroidManager extends Container implements Updatable {
             asteroid.x = Math.random() * this.renderer.screen.width;
             asteroid.y = Math.random() * this.renderer.screen.height;
 
+            asteroid.once('destroy', () => {
+                this.removeChild(asteroid);
+                this.collisionManager.remove(asteroid);
+                this.asteroids = this.asteroids.filter((a) => a !== asteroid);
+
+                this.generateAsteroids(1);
+            });
+
             this.addChild(asteroid);
+            this.collisionManager.insert(asteroid);
             this.asteroids.push(asteroid);
         }
     }

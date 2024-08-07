@@ -14,9 +14,9 @@ export class AsteroidsGame extends Game {
     }
 
     protected async initialize(): Promise<void> {
-        this.asteroidManager = new AsteroidManager(this.renderer);
         this.collisionsManager = new CollisionManager();
-        this.player = new Player(this.renderer);
+        this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager);
+        this.player = new Player(this.renderer, this.collisionsManager);
     }
 
     protected async loadContent(): Promise<void> {
@@ -25,12 +25,9 @@ export class AsteroidsGame extends Game {
         await this.player.loadContent();
         await this.asteroidManager.loadContent();
 
-        this.player.x = this.renderer.screen.width / 2 - this.player.width / 2;
-        this.player.y = this.renderer.screen.height / 2 - this.player.height / 2;
-
         await this.asteroidManager.generateAsteroids(20);
 
-        this.collisionsManager.insert(this.player, ...this.asteroidManager.asteroids);
+        this.collisionsManager.insert(this.player);
 
         this.container.addChild(this.player, this.asteroidManager);
     }
