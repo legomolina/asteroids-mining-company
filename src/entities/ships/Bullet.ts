@@ -10,10 +10,11 @@ export class Bullet extends Collidable {
 
     protected hitBox!: Polygon;
 
-    constructor(renderer: Renderer) {
+    constructor(renderer: Renderer, initialSpeed: number) {
         super(renderer);
 
         this.label = 'bullet';
+        this.speed += initialSpeed;
     }
 
     async loadContent(): Promise<void> {

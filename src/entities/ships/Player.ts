@@ -163,7 +163,7 @@ export class Player extends Collidable {
 
     private async getPlayerShooting(): Promise<void> {
         if (this.input.keyboard.isKeyReleased(Keys.Space)) {
-            const bullet = new Bullet(this.renderer);
+            const bullet = new Bullet(this.renderer, this.direction.magnitude());
 
             await bullet.initialize();
             await bullet.loadContent();
