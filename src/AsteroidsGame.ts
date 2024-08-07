@@ -15,8 +15,8 @@ export class AsteroidsGame extends Game {
 
     protected async initialize(): Promise<void> {
         this.collisionsManager = new CollisionManager();
-        this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager);
         this.player = new Player(this.renderer, this.collisionsManager);
+        this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager, this.player);
     }
 
     protected async loadContent(): Promise<void> {

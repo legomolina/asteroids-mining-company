@@ -1,7 +1,7 @@
 import {
     Assets,
     Point,
-    Polygon, type Renderer,
+    Polygon, Rectangle, type Renderer,
     Sprite,
     Spritesheet,
     type Texture,
@@ -23,6 +23,7 @@ export class Player extends Collidable {
     private inertia = .007;
     private maxSpeed = 8;
     private rotationSpeed: number = 5;
+    private safeAreaPadding = 50;
 
     private bullets: Bullet[] = [];
     private direction: Vector2 = Vector2.zero;
@@ -41,6 +42,19 @@ export class Player extends Collidable {
 
     get thrustTexture(): Texture {
         return this.spritesheet.textures['player_thrust']!;
+    }
+
+    get safeArea(): Rectangle {
+        if (!this.sprite) {
+            return new Rectangle(0, 0, 0 ,0);
+        }
+
+        return new Rectangle(
+            this.spritePosition.x - this.sprite.width / 2 - this.safeAreaPadding,
+            this.spritePosition.y - this.sprite.height / 2 - this.safeAreaPadding,
+            this.sprite.width + this.safeAreaPadding * 2,
+            this.sprite.height + this.safeAreaPadding * 2,
+        );
     }
 
     constructor(renderer: Renderer, private collisionManager: CollisionManager) {
