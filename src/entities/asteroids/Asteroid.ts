@@ -10,11 +10,13 @@ export enum AsteroidSize {
 }
 
 export class Asteroid extends Collidable {
+    private health: number = 1;
     private rotationSpeed: number = Math.randomRange(-2, 2);
     private speed: number = 2 + Math.random();
-    private health: number = 1;
 
     protected hitBox!: Polygon;
+
+    score = 1;
 
     constructor(renderer: Renderer, texture: Texture, private size: AsteroidSize) {
         super(renderer);
@@ -31,6 +33,12 @@ export class Asteroid extends Collidable {
             [AsteroidSize.SMALL]: 1,
             [AsteroidSize.MEDIUM]: 2,
             [AsteroidSize.LARGE]: 3,
+        }[size];
+
+        this.score = {
+            [AsteroidSize.SMALL]: 10,
+            [AsteroidSize.MEDIUM]: 20,
+            [AsteroidSize.LARGE]: 40,
         }[size];
     }
 

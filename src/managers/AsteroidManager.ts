@@ -48,6 +48,7 @@ export class AsteroidManager extends Container implements Updatable {
             asteroid.position = this.getAsteroidInitialPosition();
 
             asteroid.once('destroy', () => {
+                this.player.score += asteroid.score;
                 this.removeChild(asteroid);
                 this.collisionManager.remove(asteroid);
                 this.asteroids = this.asteroids.filter((a) => a !== asteroid);

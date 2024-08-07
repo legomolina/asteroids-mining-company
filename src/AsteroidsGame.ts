@@ -1,13 +1,19 @@
-import type { Ticker } from 'pixi.js';
+import { Container, type Ticker } from 'pixi.js';
 import { Game } from './core/Game';
 import { Player } from './entities/ships/Player';
 import { AsteroidManager } from './managers/AsteroidManager';
 import { CollisionManager } from './managers/CollisionManager';
+import { Score } from './entities/ui/Score';
 
 export class AsteroidsGame extends Game {
     private asteroidManager!: AsteroidManager;
     private collisionsManager!: CollisionManager;
     private player!: Player;
+
+    private world = new Container({ isRenderGroup: true });
+    private hud = new Container({ isRenderGroup: true });
+
+    private score!: Score;
 
     constructor() {
         super('Asteroids: Mining CO.');
@@ -17,6 +23,8 @@ export class AsteroidsGame extends Game {
         this.collisionsManager = new CollisionManager();
         this.player = new Player(this.renderer, this.collisionsManager);
         this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager, this.player);
+
+        this.score = new Score(this.renderer, this.player);
     }
 
     protected async loadContent(): Promise<void> {
@@ -29,7 +37,13 @@ export class AsteroidsGame extends Game {
 
         this.collisionsManager.insert(this.player);
 
-        this.container.addChild(this.player, this.asteroidManager);
+        this.world.addChild(this.player, this.asteroidManager);
+
+        await this.score.loadContent();
+
+        this.hud.addChild(this.score);
+
+        this.container.addChild(this.world, this.hud);
     }
 
     update(ticker: Ticker): void {
@@ -37,5 +51,6 @@ export class AsteroidsGame extends Game {
         this.collisionsManager.update();
         this.debugManager.update();
         this.player.update(ticker);
+        this.score.update();
     }
 }

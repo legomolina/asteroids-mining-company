@@ -34,6 +34,7 @@ export class Player extends Collidable {
     private input = InputManager.instance;
     private spritesheet!: Spritesheet;
 
+    score = 0;
     hitBox!: Polygon;
 
     get idleTexture(): Texture {
