@@ -1,0 +1,1 @@
+type GamepadApi = globalThis.Gamepad;
