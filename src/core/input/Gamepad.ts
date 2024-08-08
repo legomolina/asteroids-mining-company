@@ -61,7 +61,7 @@ export class Gamepad implements Updatable {
     }
 
     getStick(stick: GamepadSticks): GamepadStickState {
-        return this.sticksState.get(stick)!;
+        return this.sticksState.get(stick) ?? { pressed: false, position: new Point(0, 0) };
     }
 
     getTrigger(trigger: GamepadTriggers): GamepadTriggerState {

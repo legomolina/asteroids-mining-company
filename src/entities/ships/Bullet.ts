@@ -44,7 +44,7 @@ export class Bullet extends Collidable {
 
         this.hitBox = this.createHitBox();
 
-        if (this.position.y < -100) {
+        if (!this.renderer.screen.contains(this.x, this.y)) {
             this.emit('destroy');
         }
     }

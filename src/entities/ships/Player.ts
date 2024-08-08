@@ -1,7 +1,9 @@
 import {
     Assets,
     Point,
-    Polygon, Rectangle, type Renderer,
+    Polygon,
+    Rectangle,
+    type Renderer,
     Sprite,
     Spritesheet,
     type Texture,
@@ -15,6 +17,7 @@ import { Bullet } from './Bullet';
 import { rotatePoint } from '../../math/Utils';
 import type { CollisionManager } from '../../managers/CollisionManager';
 import { Asteroid } from '../asteroids/Asteroid';
+import { GamepadSticks, GamepadTriggers } from '../../core/input/Gamepad';
 
 export class Player extends Collidable {
     private static readonly ATLAS_FILE = '/assets/player/data.json';
@@ -33,6 +36,7 @@ export class Player extends Collidable {
     private isThrusterActive = false;
     private input = InputManager.instance;
     private spritesheet!: Spritesheet;
+    private previousRtTriggerValue = 0;
 
     score = 0;
     hitBox!: Polygon;
@@ -126,11 +130,11 @@ export class Player extends Collidable {
     private getPlayerRotationDirection(deltaTime: number): number {
         let rotation = this.directionAngle;
 
-        if (this.input.keyboard.isKeyDown(Keys.Right)) {
+        if (this.input.keyboard.isKeyDown(Keys.Right) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.RIGHT).position.x > 0.15 : false) {
             rotation += this.rotationSpeed * deltaTime;
         }
 
-        if (this.input.keyboard.isKeyDown(Keys.Left)) {
+        if (this.input.keyboard.isKeyDown(Keys.Left) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.RIGHT).position.x < -0.15 : false) {
             rotation -= this.rotationSpeed * deltaTime;
         }
 
@@ -140,13 +144,13 @@ export class Player extends Collidable {
     private getPlayerMoveDirection(): Vector2 {
         let direction = Vector2.zero;
 
-        if (this.input.keyboard.isKeyDown(Keys.Up)) { // Handle thruster forward
+        if (this.input.keyboard.isKeyDown(Keys.Up) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y < -0.1 : false) { // Handle thruster forward
             direction = new Vector2(0, -this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = true;
 
-        } else if (this.input.keyboard.isKeyDown(Keys.Down)) { // Handle thruster backward
+        } else if (this.input.keyboard.isKeyDown(Keys.Down) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y > 0.1 : false) { // Handle thruster backward
             direction = new Vector2(0, this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
@@ -163,7 +167,9 @@ export class Player extends Collidable {
     }
 
     private async getPlayerShooting(): Promise<void> {
-        if (this.input.keyboard.isKeyReleased(Keys.Space)) {
+        const currentTriggerValue = this.input.gamepads[0]?.getTrigger(GamepadTriggers.RT) ?? 0;
+
+        if (this.input.keyboard.isKeyReleased(Keys.Space) || (this.previousRtTriggerValue > currentTriggerValue + 0.2)) {
             const bullet = new Bullet(this.renderer, this.direction.magnitude());
 
             await bullet.initialize();
@@ -182,6 +188,8 @@ export class Player extends Collidable {
             this.collisionManager.insert(bullet);
             this.bullets.push(bullet);
         }
+
+        this.previousRtTriggerValue = currentTriggerValue;
     }
 
     private moveTo(velocity: Vector2): void {

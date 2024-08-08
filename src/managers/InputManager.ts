@@ -25,6 +25,10 @@ export class InputManager implements Updatable {
         });
     }
 
+    hasGamepad(index: number): boolean {
+        return Boolean(this.gamepads[index]);
+    }
+
     update(): void {
         this.keyboard.update();
 
