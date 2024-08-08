@@ -144,13 +144,13 @@ export class Player extends Collidable {
     private getPlayerMoveDirection(): Vector2 {
         let direction = Vector2.zero;
 
-        if (this.input.keyboard.isKeyDown(Keys.Up) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y < -0.1 : false) { // Handle thruster forward
+        if (this.input.keyboard.isKeyDown(Keys.Up) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.RIGHT).position.y < -0.1 : false) { // Handle thruster forward
             direction = new Vector2(0, -this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = true;
 
-        } else if (this.input.keyboard.isKeyDown(Keys.Down) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y > 0.1 : false) { // Handle thruster backward
+        } else if (this.input.keyboard.isKeyDown(Keys.Down) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.RIGHT).position.y > 0.1 : false) { // Handle thruster backward
             direction = new Vector2(0, this.acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
