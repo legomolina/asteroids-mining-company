@@ -1,4 +1,4 @@
-import { Assets, TilingSprite, type Renderer, type Ticker } from 'pixi.js';
+import { Assets, TilingSprite, type Renderer, type Ticker, AlphaFilter } from 'pixi.js';
 import type { Loadable } from '../core/Loadable';
 import type { Updatable } from '../core/Updatable';
 
@@ -23,6 +23,10 @@ export class Background implements Loadable, Updatable {
             texture,
             width: this.renderer.screen.width,
             height: this.renderer.screen.height,
+        });
+
+        this.sprite.filters = new AlphaFilter({
+            alpha: .4,
         });
 
         this.loaded = true;
