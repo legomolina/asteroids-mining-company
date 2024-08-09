@@ -42,6 +42,12 @@ export abstract class Game implements Updatable {
             resizeTo: window,
         });
 
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.onPageHidden();
+            }
+        });
+
         document.body.appendChild(this.app.canvas);
 
         await this.initialize();
@@ -61,6 +67,8 @@ export abstract class Game implements Updatable {
 
     protected abstract initialize(): Promise<void>;
     protected abstract loadContent(): Promise<void>;
+
+    protected onPageHidden(): void { }
 
     private addFpsCounterText(): void {
         this.fpsText = new Text({

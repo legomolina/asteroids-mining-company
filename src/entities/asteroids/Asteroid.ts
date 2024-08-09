@@ -50,6 +50,8 @@ export class Asteroid extends Collidable {
 
         this.hitBox = this.createHitBox();
         this.addChild(this.sprite);
+
+        this.loaded = true;
     }
 
     onCollision(other: Collidable): void {

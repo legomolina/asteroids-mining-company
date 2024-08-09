@@ -6,7 +6,7 @@ import { Asteroid } from '../asteroids/Asteroid';
 export class Bullet extends Collidable {
     private static readonly TEXTURE_PATH = '/assets/bullet.png';
 
-    private speed: number = 5;
+    private readonly speed: number = 5;
 
     protected hitBox!: Polygon;
 
@@ -28,6 +28,8 @@ export class Bullet extends Collidable {
         this.hitBox = this.createHitBox();
 
         this.addChild(this.sprite);
+
+        this.loaded = true;
     }
 
     onCollision(other: Collidable): void {

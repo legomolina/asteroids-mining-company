@@ -10,12 +10,12 @@ export abstract class Collidable extends Entity {
     abstract onCollision(other: Collidable): void;
 
     async initialize(): Promise<void> {
+        super.initialize();
         this.addChild(this.debugGraphics);
     }
 
-    update(_ticker: Ticker) {
-        super.update(_ticker);
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    update(_: Ticker) {
         if (this.debug) {
             this.debugGraphics
                 .clear()

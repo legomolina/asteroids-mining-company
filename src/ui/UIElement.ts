@@ -1,20 +1,17 @@
-import { Container, type Renderer, Sprite, Texture, type Ticker } from 'pixi.js';
 import type { Updatable } from '../core/Updatable';
-import { DebugManager } from '../managers/DebugManager';
-import type { Initializable } from '../core/Initializable';
 import type { Loadable } from '../core/Loadable';
+import type { Initializable } from '../core/Initializable';
+import { Container, type Ticker } from 'pixi.js';
+import { DebugManager } from '../managers/DebugManager';
 
-export abstract class Entity extends Container implements Initializable, Loadable, Updatable {
+export abstract class UIElement extends Container implements Initializable, Loadable, Updatable {
     protected debugManager = DebugManager.instance;
     protected debug = false;
 
-    protected texture?: Texture;
-    protected sprite?: Sprite;
-
-    loaded: boolean = false;
     initialized: boolean = false;
+    loaded: boolean = false;
 
-    constructor(protected renderer: Renderer) {
+    constructor() {
         super();
 
         this.debug = this.debugManager.debug;

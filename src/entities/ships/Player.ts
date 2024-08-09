@@ -88,6 +88,8 @@ export class Player extends Collidable {
         this.hitBox = this.createHitBox();
 
         this.addChild(this.sprite);
+
+        this.loaded = true;
     }
 
     update(ticker: Ticker): void {
@@ -96,6 +98,10 @@ export class Player extends Collidable {
         if (this.input.keyboard.isKeyReleased(Keys.F2)) {
             this.sticksMode = this.sticksMode === 'dual' ? 'single' : 'dual';
             console.log('Stick mode changed to: %s', this.sticksMode);
+        }
+
+        if (this.input.keyboard.isKeyReleased(Keys.F4)) {
+            this.score = 0;
         }
 
         const rotation = this.getPlayerRotationDirection(ticker.deltaTime);

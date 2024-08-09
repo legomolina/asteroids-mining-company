@@ -3,7 +3,8 @@ import { Game } from './core/Game';
 import { Player } from './entities/ships/Player';
 import { AsteroidManager } from './managers/AsteroidManager';
 import { CollisionManager } from './managers/CollisionManager';
-import { Score } from './entities/ui/Score';
+import { Score } from './hud/Score';
+import { Storage } from './core/storage/Storage';
 
 export class AsteroidsGame extends Game {
     private asteroidManager!: AsteroidManager;
@@ -24,7 +25,10 @@ export class AsteroidsGame extends Game {
         this.player = new Player(this.renderer, this.collisionsManager);
         this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager, this.player);
 
-        this.score = new Score(this.renderer, this.player);
+        this.player.score = Storage.instance.getScore();
+
+        this.score = new Score(this.player);
+        this.score.initialize();
     }
 
     protected async loadContent(): Promise<void> {
@@ -44,6 +48,12 @@ export class AsteroidsGame extends Game {
         this.hud.addChild(this.score);
 
         this.container.addChild(this.world, this.hud);
+    }
+
+    protected onPageHidden() {
+        super.onPageHidden();
+
+        Storage.instance.saveScore(this.player.score);
     }
 
     update(ticker: Ticker): void {

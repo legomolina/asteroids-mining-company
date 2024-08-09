@@ -3,14 +3,16 @@ import { Asteroid, AsteroidSize } from '../entities/asteroids/Asteroid';
 import type { Updatable } from '../core/Updatable';
 import type { CollisionManager } from './CollisionManager';
 import type { Player } from '../entities/ships/Player';
+import type { Loadable } from '../core/Loadable';
 
-export class AsteroidManager extends Container implements Updatable {
+export class AsteroidManager extends Container implements Loadable, Updatable {
     private static readonly ATLAS_FILE = '/assets/asteroids/data.json';
 
     private screenPadding = 50;
     private spritesheet!: Spritesheet;
 
     asteroids: Asteroid[] = [];
+    loaded: boolean = false;
 
     constructor(private renderer: Renderer, private collisionManager: CollisionManager, private player: Player) {
         super();
@@ -23,6 +25,8 @@ export class AsteroidManager extends Container implements Updatable {
         this.spritesheet = new Spritesheet(texture, asteroidsAtlas);
 
         await this.spritesheet.parse();
+
+        this.loaded = true;
     }
 
     getTexture(name: string): Texture | undefined {

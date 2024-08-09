@@ -9,6 +9,7 @@ export enum Keys {
     LShift = 'ShiftLeft',
     F2 = 'F2',
     F3 = 'F3',
+    F4 = 'F4',
 }
 
 export interface KeyState {
@@ -49,7 +50,7 @@ export class Keyboard implements Updatable {
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
-        if (['F2', 'F3'].includes(event.key)) {
+        if (['F2', 'F3', 'F4'].includes(event.key)) {
             event.preventDefault();
         }
 
