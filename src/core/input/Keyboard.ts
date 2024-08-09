@@ -7,6 +7,7 @@ export enum Keys {
     Right = 'ArrowRight',
     Space = 'Space',
     LShift = 'ShiftLeft',
+    F2 = 'F2',
     F3 = 'F3',
 }
 
@@ -48,7 +49,7 @@ export class Keyboard implements Updatable {
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
-        if (event.key === 'F3') {
+        if (['F2', 'F3'].includes(event.key)) {
             event.preventDefault();
         }
 

@@ -48,6 +48,8 @@ export class Gamepad implements Updatable {
     private readonly sticksState: Map<GamepadSticks, GamepadStickState> = new Map<GamepadSticks, GamepadStickState>();
     private readonly triggersState: Map<GamepadTriggers, GamepadTriggerState> = new Map<GamepadTriggers, GamepadTriggerState>();
 
+    public static readonly STICK_DEADZONE = 0.11;
+
     constructor(private index: number) {}
 
     isButtonPressed(button: GamepadButtons): boolean {
@@ -92,11 +94,23 @@ export class Gamepad implements Updatable {
         // Update sticks state
         this.sticksState.set(GamepadSticks.LEFT, {
             pressed: gamepad.buttons[Gamepad.LEFT_STICK_BUTTON]!.pressed,
-            position: new Point(gamepad.axes[Gamepad.LEFT_STICK_X_AXE], gamepad.axes[Gamepad.LEFT_STICK_Y_AXE]),
+            position: new Point(this.applyAxeModifications(gamepad.axes[Gamepad.LEFT_STICK_X_AXE]!), this.applyAxeModifications(gamepad.axes[Gamepad.LEFT_STICK_Y_AXE]!)),
         });
         this.sticksState.set(GamepadSticks.RIGHT, {
             pressed: gamepad.buttons[Gamepad.RIGHT_STICK_BUTTON]!.pressed,
-            position: new Point(gamepad.axes[Gamepad.RIGHT_STICK_X_AXE], gamepad.axes[Gamepad.RIGHT_STICK_Y_AXE]),
+            position: new Point(this.applyAxeModifications(gamepad.axes[Gamepad.RIGHT_STICK_X_AXE]!), this.applyAxeModifications(gamepad.axes[Gamepad.RIGHT_STICK_Y_AXE]!)),
         });
+    }
+
+    private applyAxeDeadzone(value: number): number {
+        return Math.abs(value) < Gamepad.STICK_DEADZONE ? 0 : value;
+    }
+
+    private applyAxeRound(value: number): number {
+        return Math.roundToDecimal(value, 4);
+    }
+
+    private applyAxeModifications(value: number): number {
+        return this.applyAxeRound(this.applyAxeDeadzone(value));
     }
 }

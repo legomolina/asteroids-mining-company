@@ -17,10 +17,13 @@ import { Bullet } from './Bullet';
 import { rotatePoint } from '../../math/Utils';
 import type { CollisionManager } from '../../managers/CollisionManager';
 import { Asteroid } from '../asteroids/Asteroid';
-import { GamepadSticks, GamepadTriggers } from '../../core/input/Gamepad';
+import { GamepadButtons, GamepadSticks } from '../../core/input/Gamepad';
 
 export class Player extends Collidable {
     private static readonly ATLAS_FILE = '/assets/player/data.json';
+
+    // TODO remove
+    private sticksMode: 'single' | 'dual' = 'dual';
 
     private acceleration = .2;
     private inertia = .007;
@@ -36,7 +39,6 @@ export class Player extends Collidable {
     private isThrusterActive = false;
     private input = InputManager.instance;
     private spritesheet!: Spritesheet;
-    private previousRtTriggerValue = 0;
 
     score = 0;
     hitBox!: Polygon;
@@ -91,6 +93,11 @@ export class Player extends Collidable {
     update(ticker: Ticker): void {
         super.update(ticker);
 
+        if (this.input.keyboard.isKeyReleased(Keys.F2)) {
+            this.sticksMode = this.sticksMode === 'dual' ? 'single' : 'dual';
+            console.log('Stick mode changed to: %s', this.sticksMode);
+        }
+
         const rotation = this.getPlayerRotationDirection(ticker.deltaTime);
         const direction = this.getPlayerMoveDirection();
 
@@ -119,7 +126,6 @@ export class Player extends Collidable {
             bullet.update(ticker);
         });
     }
-
      
     onCollision(other: Collidable): void {
         if (other instanceof Asteroid) {
@@ -128,30 +134,58 @@ export class Player extends Collidable {
     }
 
     private getPlayerRotationDirection(deltaTime: number): number {
+        const stick = this.sticksMode === 'dual' ? GamepadSticks.RIGHT : GamepadSticks.LEFT;
+
+        const isGamepad = this.input.hasGamepad(0);
+        const axePosition = isGamepad ? this.input.gamepads[0]!.getStick(stick).position.x : 0;
+
         let rotation = this.directionAngle;
 
-        if (this.input.keyboard.isKeyDown(Keys.Right) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.x > 0.15 : false) {
-            rotation += this.rotationSpeed * deltaTime;
+        if (this.input.keyboard.isKeyDown(Keys.Right) || axePosition > 0) {
+            if (axePosition !== 0) {
+                rotation += Math.linearInterpolation(0, 1, 0, this.rotationSpeed, Math.abs(axePosition)) * deltaTime;
+            } else {
+                rotation += this.rotationSpeed * deltaTime;
+            }
         }
 
-        if (this.input.keyboard.isKeyDown(Keys.Left) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.x < -0.15 : false) {
-            rotation -= this.rotationSpeed * deltaTime;
+        if (this.input.keyboard.isKeyDown(Keys.Left) || axePosition < 0) {
+            if (axePosition !== 0) {
+                rotation -= Math.linearInterpolation(0, 1, 0, this.rotationSpeed, Math.abs(axePosition)) * deltaTime;
+            } else {
+                rotation -= this.rotationSpeed * deltaTime;
+            }
         }
 
         return rotation;
     }
 
     private getPlayerMoveDirection(): Vector2 {
+        const isGamepad = this.input.hasGamepad(0);
+        const axePosition = isGamepad ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y : 0;
+
         let direction = Vector2.zero;
 
-        if (this.input.keyboard.isKeyDown(Keys.Up) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y < -0.1 : false) { // Handle thruster forward
-            direction = new Vector2(0, -this.acceleration).rotate(this.directionAngle).sum(this.direction);
+        if (this.input.keyboard.isKeyDown(Keys.Up) || axePosition < 0) { // Handle thruster forward
+            let acceleration = this.acceleration;
+
+            if (axePosition !== 0) {
+                acceleration = Math.linearInterpolation(0, 1, 0, this.acceleration, Math.abs(axePosition));
+            }
+
+            direction = new Vector2(0, -acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = true;
 
-        } else if (this.input.keyboard.isKeyDown(Keys.Down) || this.input.hasGamepad(0) ? this.input.gamepads[0]!.getStick(GamepadSticks.LEFT).position.y > 0.1 : false) { // Handle thruster backward
-            direction = new Vector2(0, this.acceleration).rotate(this.directionAngle).sum(this.direction);
+        } else if (this.input.keyboard.isKeyDown(Keys.Down) || axePosition > 0) { // Handle thruster backward
+            let acceleration = this.acceleration;
+
+            if (axePosition !== 0) {
+                acceleration = Math.linearInterpolation(0, 1, 0, this.acceleration, Math.abs(axePosition));
+            }
+
+            direction = new Vector2(0, acceleration).rotate(this.directionAngle).sum(this.direction);
             direction = direction.sum(this.direction.scalar(-this.inertia * 2));
 
             this.isThrusterActive = false;
@@ -167,9 +201,7 @@ export class Player extends Collidable {
     }
 
     private async getPlayerShooting(): Promise<void> {
-        const currentTriggerValue = this.input.gamepads[0]?.getTrigger(GamepadTriggers.RT) ?? 0;
-
-        if (this.input.keyboard.isKeyReleased(Keys.Space) || (this.previousRtTriggerValue > currentTriggerValue + 0.2)) {
+        if (this.input.keyboard.isKeyReleased(Keys.Space) || this.input.gamepads[0]?.isButtonReleased(GamepadButtons.RB)) {
             const bullet = new Bullet(this.renderer, this.direction.magnitude());
 
             await bullet.initialize();
@@ -188,8 +220,6 @@ export class Player extends Collidable {
             this.collisionManager.insert(bullet);
             this.bullets.push(bullet);
         }
-
-        this.previousRtTriggerValue = currentTriggerValue;
     }
 
     private moveTo(velocity: Vector2): void {
