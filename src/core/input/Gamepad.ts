@@ -1,6 +1,7 @@
 import type { Updatable } from '../Updatable';
 import { Point } from 'pixi.js';
 
+export type GamepadButtonState = boolean;
 export type GamepadTriggerState = number;
 export type GamepadStickState = {
     pressed: boolean;
@@ -44,9 +45,11 @@ export class Gamepad implements Updatable {
     private static readonly RIGHT_STICK_Y_AXE = 3;
     private static readonly RIGHT_STICK_BUTTON = 11;
 
-    private readonly buttonsState: Map<GamepadButtons, boolean> = new Map<GamepadButtons, boolean>();
+    private readonly buttonsState: Map<GamepadButtons, GamepadButtonState> = new Map<GamepadButtons, GamepadButtonState>();
     private readonly sticksState: Map<GamepadSticks, GamepadStickState> = new Map<GamepadSticks, GamepadStickState>();
     private readonly triggersState: Map<GamepadTriggers, GamepadTriggerState> = new Map<GamepadTriggers, GamepadTriggerState>();
+
+    private previousButtonsState: Map<GamepadButtons, GamepadButtonState> = new Map<GamepadButtons, GamepadButtonState>();
 
     public static readonly STICK_DEADZONE = 0.11;
 
@@ -59,7 +62,8 @@ export class Gamepad implements Updatable {
 
     isButtonReleased(button: GamepadButtons): boolean {
         const state = this.buttonsState.get(button);
-        return this.buttonsState.has(button) && !state;
+        const previousState = this.previousButtonsState.get(button);
+        return this.buttonsState.has(button) && previousState! && !state!;
     }
 
     getStick(stick: GamepadSticks): GamepadStickState {
@@ -77,13 +81,10 @@ export class Gamepad implements Updatable {
             return;
         }
 
+        this.previousButtonsState = new Map([...this.buttonsState]);
+
         // Update buttons state
         gamepad.buttons.forEach((button, index) => {
-            if (!button.pressed) {
-                this.buttonsState.delete(index);
-                return;
-            }
-
             this.buttonsState.set(index, button.pressed);
         });
 
