@@ -5,11 +5,13 @@ import { AsteroidManager } from './managers/AsteroidManager';
 import { CollisionManager } from './managers/CollisionManager';
 import { Score } from './hud/Score';
 import { Storage } from './core/storage/Storage';
+import { Background } from './entities/Background';
 
 export class AsteroidsGame extends Game {
     private asteroidManager!: AsteroidManager;
     private collisionsManager!: CollisionManager;
     private player!: Player;
+    private background!: Background;
 
     private world = new Container({ isRenderGroup: true });
     private hud = new Container({ isRenderGroup: true });
@@ -24,6 +26,7 @@ export class AsteroidsGame extends Game {
         this.collisionsManager = new CollisionManager();
         this.player = new Player(this.renderer, this.collisionsManager);
         this.asteroidManager = new AsteroidManager(this.renderer, this.collisionsManager, this.player);
+        this.background = new Background(this.renderer);
 
         this.player.score = Storage.instance.getScore();
 
@@ -32,6 +35,7 @@ export class AsteroidsGame extends Game {
     }
 
     protected async loadContent(): Promise<void> {
+        await this.background.loadContent();
         await this.player.initialize();
 
         await this.player.loadContent();
@@ -47,7 +51,7 @@ export class AsteroidsGame extends Game {
 
         this.hud.addChild(this.score);
 
-        this.container.addChild(this.world, this.hud);
+        this.container.addChild(this.background.backgroundSprite, this.world, this.hud);
     }
 
     protected onPageHidden() {
@@ -62,5 +66,6 @@ export class AsteroidsGame extends Game {
         this.debugManager.update();
         this.player.update(ticker);
         this.score.update();
+        this.background.update(ticker);
     }
 }
