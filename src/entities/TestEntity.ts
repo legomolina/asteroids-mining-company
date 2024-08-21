@@ -4,7 +4,7 @@ import { Text, type Container, type ContainerChild } from 'pixi.js';
 export default class TestEntity implements IEntity {
     private text: Text;
 
-    isLoaded: boolean;
+    isLoaded: boolean = false;
 
     constructor(private readonly container: Container<ContainerChild>) {
         this.text = new Text({
@@ -20,7 +20,7 @@ export default class TestEntity implements IEntity {
     }
     render(): void {
     }
-    update(deltaTime: number): void {
+    update(): void {
     }
 
 }

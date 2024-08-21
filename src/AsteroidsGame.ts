@@ -1,12 +1,10 @@
 import Game from './core/Game';
-import MainMenu from './stages/MainMenu';
 import GameWorld from './stages/GameWorld';
 import StageManager from './managers/StageManager';
 
 export default class AsteroidsGame extends Game {
     private stageManager: StageManager;
-    private mainMenu: MainMenu;
-    private gameWorld: GameWorld;
+    private gameWorld!: GameWorld;
 
     constructor() {
         super('Asteroids Mining Company');
@@ -15,7 +13,6 @@ export default class AsteroidsGame extends Game {
     }
 
     async initialized(): Promise<void> {
-        this.mainMenu = new MainMenu(this.stageManager);
         this.gameWorld = new GameWorld(this.renderer, this.stageManager);
     }
 
