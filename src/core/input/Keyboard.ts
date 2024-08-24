@@ -7,6 +7,7 @@ export const KeyboardKeys = {
     F2: 'F2',
     F3: 'F3',
     F4: 'F4',
+    ESC: 'Escape',
 } as const;
 
 type KeyboardKey = KeysOf<typeof KeyboardKeys>;

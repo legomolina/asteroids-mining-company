@@ -9,10 +9,13 @@ export default class StageManager {
     }
 
     addStage(stage: Stage): void {
-        stage.load().then(() => {
-            this.stages.push(stage);
-            this.stage.addChild(stage.container);
-        });
+        if (stage.isLoaded) {
+            this.loadStage(stage);
+        } else {
+            stage.load().then(() => {
+                this.loadStage(stage);
+            });
+        }
     }
 
     popStage(): Stage | undefined {
@@ -29,5 +32,10 @@ export default class StageManager {
 
     peekStage(): Stage | undefined {
         return this.stages.at(-1);
+    }
+
+    private loadStage(stage: Stage): void {
+        this.stages.push(stage);
+        this.stage.addChild(stage.container);
     }
 }

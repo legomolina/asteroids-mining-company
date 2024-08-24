@@ -29,6 +29,17 @@ export default class Vector2 {
         return Vector2.zero;
     }
 
+    clampMagnitude(maxValue: number): Vector2 {
+        const magnitude = this.magnitude();
+        let factor = 1;
+
+        if (magnitude > maxValue) {
+            factor = maxValue / magnitude;
+        }
+
+        return new Vector2(this.x * factor, this.y * factor);
+    }
+
     rotate(angle: number): Vector2 {
         const radAngle: number = angle * Math.PI / 180;
         const x = this.x * Math.cos(radAngle) - this.y * Math.sin(radAngle);

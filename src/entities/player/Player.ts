@@ -15,9 +15,9 @@ export default class Player implements IEntity {
     isLoaded = false;
 
     public acceleration = .5;
-    public friction = .05;
+    public friction = .01;
     public maxSpeed = 8;
-    public rotationSpeed = 2;
+    public rotationSpeed = 2.5;
 
     get transform() {
         return this._transform;

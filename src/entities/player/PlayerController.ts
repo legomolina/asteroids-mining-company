@@ -24,10 +24,7 @@ export default class PlayerController {
         const thrusterForce = new Vector2(0, acceleration).rotate(this.player.transform.rotation);
         const frictionForce = this.velocity.scalar(-this.player.friction * deltaTime);
 
-        this.velocity = this.velocity.sum(thrusterForce.sum(frictionForce).scalar(deltaTime));
-
-        this.velocity.x = MathUtils.clamp(this.velocity.x, -this.player.maxSpeed, this.player.maxSpeed);
-        this.velocity.y = MathUtils.clamp(this.velocity.y, -this.player.maxSpeed, this.player.maxSpeed);
+        this.velocity = this.velocity.sum(thrusterForce.sum(frictionForce).scalar(deltaTime)).clampMagnitude(this.player.maxSpeed);
 
         this.player.transform.position = this.moveTo(this.velocity);
     }

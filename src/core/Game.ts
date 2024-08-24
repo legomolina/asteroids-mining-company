@@ -32,7 +32,7 @@ export default abstract class Game {
     async load(): Promise<void> {
         await this.app.init({
             antialias: true,
-            background: 'cornflowerblue',
+            background: 'black', // 'cornflowerblue',
             resizeTo: window,
             sharedTicker: false,
         });
