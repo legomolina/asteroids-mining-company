@@ -1,3 +1,5 @@
+import { Point } from 'pixi.js';
+
 export default class MathUtils {
     // Interpolation functions
     static clamp(value: number, min: number, max: number): number {
@@ -20,5 +22,11 @@ export default class MathUtils {
     static roundToDecimal(value: number, decimalPlaces: number = 2): number {
         const multiplier = Math.pow(10, decimalPlaces);
         return Math.round(value * multiplier) / multiplier;
+    }
+
+    static rotatePoint(point: Point, angle: number, origin = new Point(0, 0)): Point {
+        const displacement = new Point(point.x - origin.x, point.y - origin.y);
+        const rotation = new Point(displacement.x * Math.cos(angle) - displacement.y * Math.sin(angle), displacement.x * Math.sin(angle) + displacement.y * Math.cos(angle));
+        return new Point(rotation.x + origin.x, rotation.y + origin.y);
     }
 }
