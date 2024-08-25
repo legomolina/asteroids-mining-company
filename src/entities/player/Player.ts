@@ -1,5 +1,15 @@
 import type IEntity from '../IEntity';
-import { Assets, Container, type ContainerChild, Point, type Renderer, Sprite, Spritesheet, Texture } from 'pixi.js';
+import {
+    Assets,
+    Container,
+    type ContainerChild,
+    Point,
+    Rectangle,
+    type Renderer,
+    Sprite,
+    Spritesheet,
+    Texture,
+} from 'pixi.js';
 import PlayerController from './PlayerController';
 import Transform from '../../core/components/Transform';
 import type Bullet from './Bullet';
@@ -12,6 +22,7 @@ export default class Player implements IEntity {
     private readonly _transform: Transform;
     private readonly _bulletsContainer: Container<Sprite>;
 
+    private safeAreaPadding = 50;
     private spriteSheet!: Spritesheet;
     private sprite!: Sprite;
 
@@ -40,6 +51,19 @@ export default class Player implements IEntity {
 
     get transform() {
         return this._transform;
+    }
+
+    get safeArea(): Rectangle {
+        if (!this.sprite) {
+            return Rectangle.EMPTY;
+        }
+
+        return new Rectangle(
+            this.transform.position.x - this.sprite.width / 2 - this.safeAreaPadding,
+            this.transform.position.y - this.sprite.height / 2 - this.safeAreaPadding,
+            this.sprite.width + this.safeAreaPadding * 2,
+            this.sprite.height + this.safeAreaPadding * 2,
+        );
     }
 
     constructor(

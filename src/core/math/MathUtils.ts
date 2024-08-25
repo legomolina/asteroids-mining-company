@@ -29,4 +29,8 @@ export default class MathUtils {
         const rotation = new Point(displacement.x * Math.cos(angle) - displacement.y * Math.sin(angle), displacement.x * Math.sin(angle) + displacement.y * Math.cos(angle));
         return new Point(rotation.x + origin.x, rotation.y + origin.y);
     }
+
+    static randomRange(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min) + min);
+    }
 }
