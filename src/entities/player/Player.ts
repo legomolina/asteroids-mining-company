@@ -1,9 +1,8 @@
-import type IEntity from '../IEntity';
 import {
     Assets,
     Container,
-    type ContainerChild,
-    Point,
+    type ContainerChild, type Graphics,
+    Point, Polygon,
     Rectangle,
     type Renderer,
     Sprite,
@@ -14,8 +13,13 @@ import PlayerController from './PlayerController';
 import Transform from '../../core/components/Transform';
 import type Bullet from './Bullet';
 import Vector2 from '../../core/math/Vector2';
+import type { ICollidable } from '../ICollidable';
+import Debug from '../../core/debug/Debug';
+import MathUtils from '../../core/math/MathUtils';
+import type { CollisionsManager } from '../../managers/CollisionsManager';
+import Asteroid from '../asteoids/Asteroid';
 
-export default class Player implements IEntity {
+export default class Player implements ICollidable {
     private static readonly SPRITE_SHEET_DATA_PATH = '/assets/sprites/player/data.json';
 
     private readonly playerController: PlayerController;
@@ -25,8 +29,11 @@ export default class Player implements IEntity {
     private safeAreaPadding = 50;
     private spriteSheet!: Spritesheet;
     private sprite!: Sprite;
+    private debugGraphics: Graphics | null = null;
 
-    isLoaded = false;
+    isColliding: boolean = false;
+    hitBox!: Polygon;
+    isLoaded: boolean = false;
 
     public bullets: Bullet[];
 
@@ -37,7 +44,9 @@ export default class Player implements IEntity {
     public texture!: Texture;
     public velocity: Vector2;
 
-    get bulletsContainer(): Container<Sprite> {
+    private debugColor = 'red';
+
+    get bulletsContainer(): Container<ContainerChild> {
         return this._bulletsContainer;
     }
 
@@ -69,17 +78,26 @@ export default class Player implements IEntity {
     constructor(
         private readonly container: Container<ContainerChild>,
         renderer: Renderer,
+        collisionsManager: CollisionsManager,
     ) {
-        this.playerController = new PlayerController(this, renderer);
+        this.playerController = new PlayerController(this, renderer, collisionsManager);
         this._transform = new Transform();
+
         this.bullets = [];
         this._bulletsContainer = new Container();
-
         this._bulletsContainer.label = 'Bullets container';
 
         this.transform.position = new Point(renderer.screen.width / 2, renderer.screen.height / 2);
 
         this.velocity = Vector2.zero;
+
+        collisionsManager.insert(this);
+    }
+
+    onCollision(other: ICollidable): void {
+        if (other instanceof Asteroid) {
+            this.debugColor = 'green';
+        }
     }
 
     async load(): Promise<void> {
@@ -95,7 +113,10 @@ export default class Player implements IEntity {
 
         this.sprite.label = 'Player';
 
-        this.container.addChild(this.sprite, this.bulletsContainer);
+        this.hitBox = this.createHitBox();
+        this.debugGraphics = Debug.drawPoly(this.hitBox, null, this.debugColor);
+
+        this.container.addChild(this.sprite, this.bulletsContainer, this.debugGraphics);
 
         this.isLoaded = true;
     }
@@ -114,6 +135,10 @@ export default class Player implements IEntity {
         this.bullets.forEach((bullet) => {
             bullet.render();
         });
+
+        Debug.drawPoly(this.hitBox, this.debugGraphics, this.debugColor);
+
+        this.debugColor = 'red';
     }
 
     update(deltaTime: number): void {
@@ -122,5 +147,21 @@ export default class Player implements IEntity {
         this.bullets.forEach((bullet) => {
             bullet.update(deltaTime);
         });
+
+        this.hitBox = this.createHitBox();
+    }
+
+    private createHitBox(): Polygon {
+        const topLeftPoint = new Point(this.transform.position.x - this.sprite.width / 2, this.transform.position.y - this.sprite.height / 2);
+        const topRightPoint = new Point(this.transform.position.x - this.sprite.width / 2 + this.sprite.width, this.transform.position.y - this.sprite.height / 2);
+        const bottomRightPoint = new Point(this.transform.position.x + this.sprite.width / 2, this.transform.position.y + this.sprite.height / 2);
+        const bottomLeftPoint = new Point(this.transform.position.x - this.sprite.width / 2, this.transform.position.y + this.sprite.height / 2);
+
+        return new Polygon(
+            MathUtils.rotatePoint(new Point(topLeftPoint.x + 8, topLeftPoint.y), this.transform.rotation, this.transform.position),
+            MathUtils.rotatePoint(new Point(topRightPoint.x - 8, topRightPoint.y), this.transform.rotation, this.transform.position),
+            MathUtils.rotatePoint(new Point(bottomRightPoint.x, bottomRightPoint.y - 8), this.transform.rotation, this.transform.position),
+            MathUtils.rotatePoint(new Point(bottomLeftPoint.x, bottomLeftPoint.y - 8), this.transform.rotation, this.transform.position),
+        );
     }
 }

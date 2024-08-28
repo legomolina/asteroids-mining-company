@@ -78,16 +78,4 @@ export default class Vector2 {
     sum(vec: Vector2): Vector2 {
         return new Vector2(this.x + vec.x, this.y + vec.y);
     }
-
-    dot(vec: Vector2): number {
-        return this.x * vec.x + this.y * vec.y;
-    }
-
-    cross(factor: number): Vector2 {
-        return new Vector2(factor * this.y, -factor + this.x);
-    }
-
-    diff(vec: Vector2): Vector2 {
-        return new Vector2(this.x - vec.x, this.y - vec.y);
-    }
 }

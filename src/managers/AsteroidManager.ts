@@ -1,18 +1,19 @@
-import { Assets, Point, Spritesheet, type Renderer, type Texture, type ContainerChild, Container } from 'pixi.js';
+import { Point, type Renderer, type ContainerChild, Container } from 'pixi.js';
 import type Player from '../entities/player/Player';
-import Asteroid, { type AsteroidSize } from '../entities/asteoids/Asteroid';
 import MathUtils from '../core/math/MathUtils';
 import type IEntity from '../entities/IEntity';
 import Vector2 from '../core/math/Vector2';
+import type Asteroid from '../entities/asteoids/Asteroid';
+import SmallAsteroid from '../entities/asteoids/SmallAsteroid';
+import MediumAsteroid from '../entities/asteoids/MediumAsteroid';
+import { LargeAsteroid } from '../entities/asteoids/LargeAsteroid';
+import type { CollisionsManager } from './CollisionsManager';
 
 export default class AsteroidManager implements IEntity {
-    private static readonly ASTEROIDS_SPRITE_SHEET_PATH = '/assets/sprites/asteroids/data.json';
-
     private readonly asteroidsContainer: Container<ContainerChild>;
 
     private asteroids: Asteroid[];
     private screenPadding = 50;
-    private spriteSheet!: Spritesheet;
 
     isLoaded: boolean = false;
 
@@ -20,6 +21,7 @@ export default class AsteroidManager implements IEntity {
         private readonly container: Container<ContainerChild>,
         private readonly renderer: Renderer,
         private readonly player: Player,
+        private readonly collisionsManager: CollisionsManager,
     ) {
         this.asteroidsContainer = new Container();
         this.asteroids = [];
@@ -29,10 +31,17 @@ export default class AsteroidManager implements IEntity {
 
     async generateAsteroids(count: number): Promise<void> {
         for (let i = 0; i < count; i++) {
-            const texture = this.getRandomTexture();
-            const asteroid = new Asteroid(this.asteroidsContainer, this.renderer, texture, this.getAsteroidSize(texture.label!));
+            const asteroid = this.getRandomAsteroid();
 
             await asteroid.load();
+
+            this.collisionsManager.insert(asteroid);
+
+            asteroid.once('destroy', () => {
+                this.asteroids = this.asteroids.filter((a) => a !== asteroid);
+                this.collisionsManager.remove(asteroid);
+                this.generateAsteroids(1);
+            });
 
             asteroid.direction = new Vector2(1, 0).rotate(MathUtils.randomRange(0, 360));
             asteroid.transform.position = this.getAsteroidInitialPosition();
@@ -41,14 +50,7 @@ export default class AsteroidManager implements IEntity {
     }
 
     async load(): Promise<void> {
-        const spriteSheetData = await fetch(AsteroidManager.ASTEROIDS_SPRITE_SHEET_PATH).then((res) => res.json());
-        const texture = await Assets.load(spriteSheetData.meta.image);
-
-        this.spriteSheet = new Spritesheet(texture, spriteSheetData);
-        await this.spriteSheet.parse();
-
         this.container.addChild(this.asteroidsContainer);
-
         this.isLoaded = true;
     }
 
@@ -68,28 +70,19 @@ export default class AsteroidManager implements IEntity {
         });
     }
 
-    private getRandomTexture(): Texture {
-        const textureKeys = Object.keys(this.spriteSheet.textures);
-        const length = textureKeys.length;
-        const itemIndex = MathUtils.randomRange(0, length);
+    private getRandomAsteroid(): Asteroid {
+        const random = MathUtils.randomRange(0, 3);
 
-        return this.spriteSheet.textures[textureKeys[itemIndex]!]!;
-    }
-
-    private getAsteroidSize(textureName: string): AsteroidSize {
-        if (textureName.includes('small')) {
-            return 'small';
+        switch (random) {
+            case 0:
+                return new SmallAsteroid(this.asteroidsContainer, this.renderer);
+            case 1:
+                return new MediumAsteroid(this.asteroidsContainer, this.renderer);
+            case 2:
+                return new LargeAsteroid(this.asteroidsContainer, this.renderer);
         }
 
-        if (textureName.includes('medium')) {
-            return 'medium';
-        }
-
-        if (textureName.includes('large')) {
-            return 'large';
-        }
-
-        return 'small';
+        throw new Error(`Asteroid size not found: ${random}`);
     }
 
     private getAsteroidInitialPosition(): Point {
@@ -160,8 +153,6 @@ export default class AsteroidManager implements IEntity {
                 position.y -= position.y - this.player.safeArea.y;
             }
         }
-
-        console.log(position);
 
         return position;
     }

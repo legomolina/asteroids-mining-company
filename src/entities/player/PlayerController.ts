@@ -4,6 +4,7 @@ import Vector2 from '../../core/math/Vector2';
 import MathUtils from '../../core/math/MathUtils';
 import { Point, type Renderer } from 'pixi.js';
 import Bullet from './Bullet';
+import type { CollisionsManager } from '../../managers/CollisionsManager';
 
 export default class PlayerController {
     private readonly inputManager: InputManager;
@@ -11,6 +12,7 @@ export default class PlayerController {
     constructor(
         private readonly player: Player,
         private readonly renderer: Renderer,
+        private readonly collisionsManager: CollisionsManager,
     ) {
         this.inputManager = InputManager.instance;
     }
@@ -99,8 +101,11 @@ export default class PlayerController {
         const bullet = new Bullet(this.renderer, this.player);
         await bullet.load();
 
+        this.collisionsManager.insert(bullet);
+
         bullet.once('destroy', () => {
             this.player.bullets = this.player.bullets.filter((b) => b !== bullet);
+            this.collisionsManager.remove(bullet);
         });
 
         this.player.bullets.push(bullet);

@@ -10,7 +10,7 @@ export default class MathUtils {
         return x * (1 - a) + y * a;
     }
 
-    static invLerp (x: number, y: number, a: number) {
+    static invLerp (x: number, y: number, a: number): number {
         return MathUtils.clamp((a - x) / (y - x), 0, 1);
     }
 
@@ -25,12 +25,13 @@ export default class MathUtils {
     }
 
     static rotatePoint(point: Point, angle: number, origin = new Point(0, 0)): Point {
+        const rotationInRadians = angle * Math.PI / 180;
         const displacement = new Point(point.x - origin.x, point.y - origin.y);
-        const rotation = new Point(displacement.x * Math.cos(angle) - displacement.y * Math.sin(angle), displacement.x * Math.sin(angle) + displacement.y * Math.cos(angle));
+        const rotation = new Point(displacement.x * Math.cos(rotationInRadians) - displacement.y * Math.sin(rotationInRadians), displacement.x * Math.sin(rotationInRadians) + displacement.y * Math.cos(rotationInRadians));
         return new Point(rotation.x + origin.x, rotation.y + origin.y);
     }
 
-    static randomRange(min: number, max: number) {
+    static randomRange(min: number, max: number): number {
         return Math.floor(Math.random() * (max - min) + min);
     }
 }

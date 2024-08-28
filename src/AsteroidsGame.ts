@@ -1,9 +1,11 @@
 import Game from './core/Game';
 import GameWorld from './stages/GameWorld';
 import StageManager from './managers/StageManager';
+import InputManager from './managers/InputManager';
+import Debug from './core/debug/Debug';
 
 export default class AsteroidsGame extends Game {
-    private stageManager: StageManager;
+    private readonly stageManager: StageManager;
     private gameWorld!: GameWorld;
 
     constructor() {
@@ -26,5 +28,9 @@ export default class AsteroidsGame extends Game {
 
     update(deltaTime: number): void {
         this.stageManager.peekStage()?.update(deltaTime);
+
+        if (InputManager.instance.getKeyboard().isKeyReleased('F2')) {
+            Debug.enabled = !Debug.enabled;
+        }
     }
 }

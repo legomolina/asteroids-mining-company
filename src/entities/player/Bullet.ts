@@ -1,22 +1,35 @@
-import type IEntity from '../IEntity';
-import { Assets, Sprite, type Renderer, type Texture, Point, EventEmitter } from 'pixi.js';
+import {
+    Assets,
+    Circle,
+    Sprite,
+    type Renderer,
+    type Texture,
+    Point,
+    EventEmitter, type Graphics,
+} from 'pixi.js';
 import Vector2 from '../../core/math/Vector2';
 import Transform from '../../core/components/Transform';
 import type Player from './Player';
 import MathUtils from '../../core/math/MathUtils';
+import type { ICollidable } from '../ICollidable';
+import Debug from '../../core/debug/Debug';
+import Asteroid from '../asteoids/Asteroid';
 
 type BulletEventTypes = {
     destroy: () => void,
 };
 
-export default class Bullet extends EventEmitter<BulletEventTypes> implements IEntity {
+export default class Bullet extends EventEmitter<BulletEventTypes> implements ICollidable {
     private static readonly TEXTURE_PATH = '/assets/sprites/player/bullet.png';
 
     private readonly _transform: Transform;
 
     private texture!: Texture;
     private sprite!: Sprite;
+    private debugGraphics: Graphics | null = null;
 
+    isColliding: boolean = false;
+    hitBox!: Circle;
     isLoaded: boolean = false;
 
     public speed = 5;
@@ -30,10 +43,16 @@ export default class Bullet extends EventEmitter<BulletEventTypes> implements IE
 
         this._transform = new Transform();
 
-        this.transform.position = MathUtils.rotatePoint(new Point(player.transform.position.x, player.transform.position.y - 25), player.transform.rotation * Math.PI / 180, this.player.transform.position);
+        this.transform.position = MathUtils.rotatePoint(new Point(player.transform.position.x, player.transform.position.y - 25), player.transform.rotation, this.player.transform.position);
         this.transform.rotation = player.transform.rotation;
 
         this.speed += this.player.velocity.magnitude();
+    }
+
+    onCollision(other: ICollidable) {
+        if (other instanceof Asteroid) {
+            this.destroy();
+        }
     }
 
     async load(): Promise<void> {
@@ -42,7 +61,11 @@ export default class Bullet extends EventEmitter<BulletEventTypes> implements IE
         this.sprite = Sprite.from(this.texture);
         this.sprite.anchor = .5;
 
-        this.player.bulletsContainer.addChild(this.sprite);
+        this.hitBox = this.createHitBox();
+
+        this.debugGraphics = Debug.drawCircle(this.hitBox);
+
+        this.player.bulletsContainer.addChild(this.sprite, this.debugGraphics);
 
         this.isLoaded = true;
     }
@@ -54,6 +77,8 @@ export default class Bullet extends EventEmitter<BulletEventTypes> implements IE
 
         this.sprite.position = this.transform.position;
         this.sprite.rotation = this.transform.rotation;
+
+        Debug.drawCircle(this.hitBox, this.debugGraphics);
     }
 
     update(deltaTime: number): void {
@@ -61,9 +86,19 @@ export default class Bullet extends EventEmitter<BulletEventTypes> implements IE
         this.transform.position = new Vector2(this.transform.position.x , this.transform.position.y).sum(velocity).toPoint();
 
         if (!this.renderer.screen.contains(this.transform.position.x, this.transform.position.y)) {
-            this.player.bulletsContainer.removeChild(this.sprite);
-            this.emit('destroy');
+            this.destroy();
         }
+
+        this.hitBox = this.createHitBox();
     }
 
+    private createHitBox(): Circle {
+        return new Circle(this.transform.position.x, this.transform.position.y, 2);
+    }
+
+    private destroy(): void {
+        this.player.bulletsContainer.removeChild(this.sprite);
+        this.player.bulletsContainer.removeChild(this.debugGraphics!);
+        this.emit('destroy');
+    }
 }

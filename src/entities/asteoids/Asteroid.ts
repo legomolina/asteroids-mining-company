@@ -1,50 +1,76 @@
-import { type Container, type ContainerChild, type Renderer, Sprite, type Texture } from 'pixi.js';
-import type IEntity from '../IEntity';
-import Transform from '../../core/components/Transform';
+import {
+    Assets, type Circle,
+    type Container,
+    type ContainerChild, EventEmitter, type Graphics,
+    type Renderer,
+    Sprite,
+    type Texture,
+} from 'pixi.js';
+import type { ICollidable } from '../ICollidable';
 import Vector2 from '../../core/math/Vector2';
-import MathUtils from '../../core/math/MathUtils';
+import Transform from '../../core/components/Transform';
+import Debug from '../../core/debug/Debug';
+import ScoreManager from '../../managers/ScoreManager';
+import Bullet from '../player/Bullet';
 
-export type AsteroidSize = 'small' | 'medium' | 'large';
+type AsteroidEventTypes = {
+    destroy: () => void,
+};
 
-export default class Asteroid implements IEntity {
+export default abstract class Asteroid extends EventEmitter<AsteroidEventTypes> implements ICollidable {
     private readonly _transform: Transform;
 
-    private sprite!: Sprite;
+    protected readonly abstract asteroidName: string;
+    protected readonly abstract texturePath: string;
+
+    protected readonly scoreManager: ScoreManager;
+    protected texture!: Texture;
+    protected sprite!: Sprite;
+    protected debugGraphics: Graphics | null = null;
+
+    abstract hitBox: Circle;
+    abstract isColliding: boolean;
 
     isLoaded: boolean = false;
 
-    public direction: Vector2;
-    public health: number;
-    public score: number;
-    public speed: number;
-    public rotationSpeed: number;
+    public abstract direction: Vector2;
+    public abstract health: number;
+    public abstract score: number;
+    public abstract rotationSpeed: number;
+    public abstract speed: number;
 
     get transform(): Transform {
         return this._transform;
     }
 
-    constructor(
+    protected constructor(
         private readonly container: Container<ContainerChild>,
         private readonly renderer: Renderer,
-        private readonly texture: Texture,
-        private readonly size: AsteroidSize,
     ) {
-        this._transform = new Transform();
+        super();
 
-        this.direction = Vector2.zero;
-        this.health = this.getHealth();
-        this.score = this.getScore();
-        this.speed = 2 + Math.random();
-        this.rotationSpeed = MathUtils.randomRange(-2, 2);
+        this._transform = new Transform();
+        this.scoreManager = ScoreManager.instance;
+    }
+
+    onCollision(other: ICollidable): void {
+        if (other instanceof Bullet) {
+            this.scoreManager.increment(this.score);
+            this.destroy();
+        }
     }
 
     async load(): Promise<void> {
+        this.texture = await Assets.load<Texture>(this.texturePath);
         this.sprite = Sprite.from(this.texture);
 
         this.sprite.anchor = .5;
-        this.sprite.label = this.getLabel();
+        this.sprite.label = this.asteroidName;
 
-        this.container.addChild(this.sprite);
+        this.hitBox = this.createHitBox();
+        this.debugGraphics = Debug.drawCircle(this.hitBox);
+
+        this.container.addChild(this.sprite, this.debugGraphics);
 
         this.isLoaded = true;
     }
@@ -56,6 +82,8 @@ export default class Asteroid implements IEntity {
 
         this.sprite.position = this.transform.position;
         this.sprite.angle = this.transform.rotation;
+
+        Debug.drawCircle(this.hitBox, this.debugGraphics);
     }
 
     update(deltaTime: number): void {
@@ -88,29 +116,15 @@ export default class Asteroid implements IEntity {
         if (this.transform.position.y > this.renderer.screen.height + stagePadding) {
             this.transform.position.y -= boundHeight;
         }
+
+        this.hitBox = this.createHitBox();
     }
 
-    private getLabel(): string {
-        return {
-            small: 'asteroid-small',
-            medium: 'asteroid-medium',
-            large: 'asteroid-large',
-        }[this.size];
-    }
+    protected abstract createHitBox(): Circle;
 
-    private getHealth(): number {
-        return {
-            small: 1,
-            medium: 2,
-            large: 3,
-        }[this.size];
-    }
-
-    private getScore(): number {
-        return {
-            small: 10,
-            medium: 20,
-            large: 40,
-        }[this.size];
+    private destroy(): void {
+        this.container.removeChild(this.sprite);
+        this.container.removeChild(this.debugGraphics!);
+        this.emit('destroy');
     }
 }
