@@ -12,9 +12,11 @@ import Transform from '../../core/components/Transform';
 import Debug from '../../core/debug/Debug';
 import ScoreManager from '../../managers/ScoreManager';
 import Bullet from '../player/Bullet';
+import Player from '../player/Player';
 
 type AsteroidEventTypes = {
     destroy: () => void,
+    playerDestroyed: () => void,
 };
 
 export default abstract class Asteroid extends EventEmitter<AsteroidEventTypes> implements ICollidable {
@@ -57,6 +59,12 @@ export default abstract class Asteroid extends EventEmitter<AsteroidEventTypes> 
         if (other instanceof Bullet) {
             this.scoreManager.increment(this.score);
             this.destroy();
+            this.emit('destroy');
+        }
+
+        if (other instanceof Player) {
+            this.destroy();
+            this.emit('playerDestroyed');
         }
     }
 
@@ -120,11 +128,10 @@ export default abstract class Asteroid extends EventEmitter<AsteroidEventTypes> 
         this.hitBox = this.createHitBox();
     }
 
-    protected abstract createHitBox(): Circle;
-
-    private destroy(): void {
+    destroy(): void {
         this.container.removeChild(this.sprite);
         this.container.removeChild(this.debugGraphics!);
-        this.emit('destroy');
     }
+
+    protected abstract createHitBox(): Circle;
 }

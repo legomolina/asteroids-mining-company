@@ -1,7 +1,7 @@
 import {
     Assets,
     Container,
-    type ContainerChild, type Graphics,
+    type ContainerChild, EventEmitter, type Graphics,
     Point, Polygon,
     Rectangle,
     type Renderer,
@@ -18,11 +18,17 @@ import Debug from '../../core/debug/Debug';
 import MathUtils from '../../core/math/MathUtils';
 import type { CollisionsManager } from '../../managers/CollisionsManager';
 import Asteroid from '../asteoids/Asteroid';
+import ScoreManager from '../../managers/ScoreManager';
 
-export default class Player implements ICollidable {
+type PlayerEvents = {
+    destroy: () => void
+};
+
+export default class Player extends EventEmitter<PlayerEvents> implements ICollidable {
     private static readonly SPRITE_SHEET_DATA_PATH = '/assets/sprites/player/data.json';
 
     private readonly playerController: PlayerController;
+    private readonly scoreManager: ScoreManager;
     private readonly _transform: Transform;
     private readonly _bulletsContainer: Container<Sprite>;
 
@@ -37,9 +43,9 @@ export default class Player implements ICollidable {
 
     public bullets: Bullet[];
 
-    public acceleration = .2;
+    public acceleration = .1;
     public friction = .01;
-    public maxSpeed = 8;
+    public maxSpeed = 3;
     public rotationSpeed = 2.5;
     public texture!: Texture;
     public velocity: Vector2;
@@ -80,7 +86,10 @@ export default class Player implements ICollidable {
         renderer: Renderer,
         collisionsManager: CollisionsManager,
     ) {
+        super();
+
         this.playerController = new PlayerController(this, renderer, collisionsManager);
+        this.scoreManager = ScoreManager.instance;
         this._transform = new Transform();
 
         this.bullets = [];
@@ -97,6 +106,9 @@ export default class Player implements ICollidable {
     onCollision(other: ICollidable): void {
         if (other instanceof Asteroid) {
             this.debugColor = 'green';
+
+            this.scoreManager.reset();
+            this.emit('destroy');
         }
     }
 

@@ -1,25 +1,21 @@
 import Game from './core/Game';
-import GameWorld from './stages/GameWorld';
 import StageManager from './managers/StageManager';
 import InputManager from './managers/InputManager';
 import Debug from './core/debug/Debug';
 
 export default class AsteroidsGame extends Game {
-    private readonly stageManager: StageManager;
-    private gameWorld!: GameWorld;
+    private stageManager!: StageManager;
 
     constructor() {
         super('Asteroids Mining Company');
-
-        this.stageManager = new StageManager(this.stage);
     }
 
     async initialized(): Promise<void> {
-        this.gameWorld = new GameWorld(this.renderer, this.stageManager);
+        this.stageManager = new StageManager(this.stage, this.renderer);
     }
 
     async loadContent(): Promise<void> {
-        this.stageManager.addStage(this.gameWorld);
+        this.stageManager.addStage('gameWorld');
     }
 
     render(): void {

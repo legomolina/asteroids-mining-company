@@ -19,4 +19,8 @@ export default class ScoreManager {
 
         return this.score;
     }
+
+    reset(): void {
+        this._score = 0;
+    }
 }

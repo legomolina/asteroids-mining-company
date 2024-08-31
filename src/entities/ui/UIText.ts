@@ -66,6 +66,7 @@ export default class UIText implements IEntity {
         this.textElement.position = this.transform.position;
         this.textElement.angle = this.transform.rotation;
         this.textElement.scale = this.transform.scale;
+        this.textElement.zIndex = this.transform.zIndex;
     }
 
     update(): void { }

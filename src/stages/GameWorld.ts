@@ -3,7 +3,6 @@ import Player from '../entities/player/Player';
 import { Point, type Renderer } from 'pixi.js';
 import InputManager from '../managers/InputManager';
 import type StageManager from '../managers/StageManager';
-import PauseMenu from './PauseMenu';
 import AsteroidManager from '../managers/AsteroidManager';
 import { CollisionsManager } from '../managers/CollisionsManager';
 import UIText from '../entities/ui/UIText';
@@ -12,7 +11,6 @@ import ScoreManager from '../managers/ScoreManager';
 export default class GameWorld extends Stage {
     private readonly asteroidManager: AsteroidManager;
     private readonly collisionsManager: CollisionsManager;
-    private readonly pauseMenu: PauseMenu;
     private readonly player: Player;
     private readonly scoreManager: ScoreManager;
     private readonly scoreText: UIText;
@@ -21,7 +19,6 @@ export default class GameWorld extends Stage {
         super();
 
         this.collisionsManager = new CollisionsManager();
-        this.pauseMenu = new PauseMenu(renderer, stageManager);
         this.player = new Player(this.container, renderer, this.collisionsManager);
         this.asteroidManager = new AsteroidManager(this.container, renderer, this.player, this.collisionsManager);
 
@@ -45,8 +42,13 @@ export default class GameWorld extends Stage {
 
         this.collisionsManager.update();
 
+        this.player.once('destroy', () => {
+            this.stageManager.popStage();
+            this.stageManager.addStage('gameOver');
+        });
+
         if (InputManager.instance.getKeyboard().isKeyReleased('ESC')) {
-            this.stageManager.addStage(this.pauseMenu);
+            this.stageManager.addStage('pauseMenu');
         }
 
         this.scoreText.text = `Score: ${this.scoreManager.score}`;

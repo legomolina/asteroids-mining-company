@@ -6,6 +6,7 @@ export default class Transform {
     private _scale: Point | number = 1;
     private _width: number = 0;
     private _height: number = 0;
+    private _zIndex: number = 0;
 
     get position(): Point {
         return this._position;
@@ -45,5 +46,13 @@ export default class Transform {
 
     set height(value: number) {
         this._height = value;
+    }
+
+    get zIndex(): number {
+        return this._zIndex;
+    }
+
+    set zIndex(value: number) {
+        this._zIndex = value;
     }
 }

@@ -29,7 +29,7 @@ export default class PlayerController {
         this.player.transform.rotation += rotation;
 
         const thrusterForce = new Vector2(0, acceleration).rotate(this.player.transform.rotation);
-        const frictionForce = this.player.velocity.scalar(-this.player.friction * deltaTime);
+        const frictionForce = this.player.velocity.scalar(-this.player.friction);
 
         this.player.velocity = this.player.velocity.sum(thrusterForce.sum(frictionForce).scalar(deltaTime)).clampMagnitude(this.player.maxSpeed);
 

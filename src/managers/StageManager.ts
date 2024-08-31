@@ -1,14 +1,27 @@
-import type { Container, ContainerChild } from 'pixi.js';
+import type { Container, ContainerChild, Renderer } from 'pixi.js';
 import type Stage from '../core/Stage';
+import GameWorld from '../stages/GameWorld';
+import PauseMenu from '../stages/PauseMenu';
+import GameOver from '../stages/GameOver';
+
+type StageType = 'gameWorld' | 'pauseMenu' | 'gameOver';
 
 export default class StageManager {
     private stages: Stage[] = [];
 
-    constructor(private stage: Container<ContainerChild>) {
+    private readonly gameWorld: GameWorld;
+    private readonly pauseMenu: PauseMenu;
+    private readonly gameOver: GameOver;
 
+    constructor(private stage: Container<ContainerChild>, renderer: Renderer) {
+        this.gameWorld = new GameWorld(renderer, this);
+        this.pauseMenu = new PauseMenu(renderer, this);
+        this.gameOver = new GameOver(renderer, this);
     }
 
-    addStage(stage: Stage): void {
+    addStage(stageType: StageType): void {
+        const stage = this.getStage(stageType);
+
         if (stage.isLoaded) {
             this.loadStage(stage);
         } else {
@@ -37,5 +50,16 @@ export default class StageManager {
     private loadStage(stage: Stage): void {
         this.stages.push(stage);
         this.stage.addChild(stage.container);
+    }
+
+    private getStage(stageType: StageType): Stage {
+        switch (stageType) {
+            case 'gameWorld':
+                return this.gameWorld;
+            case 'pauseMenu':
+                return this.pauseMenu;
+            case 'gameOver':
+                return this.gameOver;
+        }
     }
 }

@@ -43,10 +43,24 @@ export default class AsteroidManager implements IEntity {
                 this.generateAsteroids(1);
             });
 
+            asteroid.once('playerDestroyed', () => {
+                this.clearAsteroids();
+            });
+
             asteroid.direction = new Vector2(1, 0).rotate(MathUtils.randomRange(0, 360));
             asteroid.transform.position = this.getAsteroidInitialPosition();
             this.asteroids.push(asteroid);
         }
+    }
+
+    clearAsteroids(): void {
+        this.asteroids.forEach((asteroid) => {
+            asteroid.destroy();
+            this.collisionsManager.remove(asteroid);
+        });
+
+        this.asteroids = [];
+        this.generateAsteroids(20);
     }
 
     async load(): Promise<void> {
