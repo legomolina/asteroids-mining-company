@@ -54,8 +54,9 @@ export default class UIButton extends EventEmitter<ButtonEvents> implements IEnt
         });
 
         this.sprite.eventMode = 'static';
-        this.sprite.addEventListener('pointertap', (e) => {
-            console.log(e);
+        this.sprite.cursor = 'pointer';
+
+        this.sprite.addEventListener('pointertap', () => {
             this.emit('click');
         });
 

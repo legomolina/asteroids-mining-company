@@ -16,9 +16,8 @@ import Vector2 from '../../core/math/Vector2';
 import type { ICollidable } from '../ICollidable';
 import Debug from '../../core/debug/Debug';
 import MathUtils from '../../core/math/MathUtils';
-import type { CollisionsManager } from '../../managers/CollisionsManager';
+import type CollisionsManager from '../../managers/CollisionsManager';
 import Asteroid from '../asteoids/Asteroid';
-import ScoreManager from '../../managers/ScoreManager';
 
 type PlayerEvents = {
     destroy: () => void
@@ -28,7 +27,6 @@ export default class Player extends EventEmitter<PlayerEvents> implements IColli
     private static readonly SPRITE_SHEET_DATA_PATH = '/assets/sprites/player/data.json';
 
     private readonly playerController: PlayerController;
-    private readonly scoreManager: ScoreManager;
     private readonly _transform: Transform;
     private readonly _bulletsContainer: Container<Sprite>;
 
@@ -89,14 +87,11 @@ export default class Player extends EventEmitter<PlayerEvents> implements IColli
         super();
 
         this.playerController = new PlayerController(this, renderer, collisionsManager);
-        this.scoreManager = ScoreManager.instance;
         this._transform = new Transform();
 
         this.bullets = [];
         this._bulletsContainer = new Container();
         this._bulletsContainer.label = 'Bullets container';
-
-        this.transform.position = new Point(renderer.screen.width / 2, renderer.screen.height / 2);
 
         this.velocity = Vector2.zero;
 
@@ -106,8 +101,6 @@ export default class Player extends EventEmitter<PlayerEvents> implements IColli
     onCollision(other: ICollidable): void {
         if (other instanceof Asteroid) {
             this.debugColor = 'green';
-
-            this.scoreManager.reset();
             this.emit('destroy');
         }
     }

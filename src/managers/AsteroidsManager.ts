@@ -7,9 +7,9 @@ import type Asteroid from '../entities/asteoids/Asteroid';
 import SmallAsteroid from '../entities/asteoids/SmallAsteroid';
 import MediumAsteroid from '../entities/asteoids/MediumAsteroid';
 import { LargeAsteroid } from '../entities/asteoids/LargeAsteroid';
-import type { CollisionsManager } from './CollisionsManager';
+import type CollisionsManager from './CollisionsManager';
 
-export default class AsteroidManager implements IEntity {
+export default class AsteroidsManager implements IEntity {
     private readonly asteroidsContainer: Container<ContainerChild>;
 
     private asteroids: Asteroid[];
@@ -20,8 +20,8 @@ export default class AsteroidManager implements IEntity {
     constructor(
         private readonly container: Container<ContainerChild>,
         private readonly renderer: Renderer,
-        private readonly player: Player,
-        private readonly collisionsManager: CollisionsManager,
+        private readonly player: Player | null,
+        private readonly collisionsManager: CollisionsManager | null,
     ) {
         this.asteroidsContainer = new Container();
         this.asteroids = [];
@@ -35,11 +35,11 @@ export default class AsteroidManager implements IEntity {
 
             await asteroid.load();
 
-            this.collisionsManager.insert(asteroid);
+            this.collisionsManager?.insert(asteroid);
 
             asteroid.once('destroy', () => {
                 this.asteroids = this.asteroids.filter((a) => a !== asteroid);
-                this.collisionsManager.remove(asteroid);
+                this.collisionsManager?.remove(asteroid);
                 this.generateAsteroids(1);
             });
 
@@ -56,7 +56,7 @@ export default class AsteroidManager implements IEntity {
     clearAsteroids(): void {
         this.asteroids.forEach((asteroid) => {
             asteroid.destroy();
-            this.collisionsManager.remove(asteroid);
+            this.collisionsManager?.remove(asteroid);
         });
 
         this.asteroids = [];
@@ -152,6 +152,10 @@ export default class AsteroidManager implements IEntity {
         // Get random position inside selected screen side
         const { minX, maxX, minY, maxY } = bounds[screenSide];
         const position = new Point(MathUtils.randomRange(minX, maxX), MathUtils.randomRange(minY, maxY));
+
+        if (this.player === null) {
+            return position;
+        }
 
         // Check if player spawn safe area contains selected position and move asteroid outside it
         if (this.player.safeArea.contains(position.x, position.y)) {

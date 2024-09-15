@@ -15,7 +15,7 @@ export default class AsteroidsGame extends Game {
     }
 
     async loadContent(): Promise<void> {
-        this.stageManager.addStage('gameWorld');
+        this.stageManager.addStage(StageManager.stages.mainMenu);
     }
 
     render(): void {

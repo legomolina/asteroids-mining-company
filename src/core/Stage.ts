@@ -11,6 +11,8 @@ export default class Stage implements IEntity {
         return this._container;
     }
 
+    async initialize(): Promise<void> {}
+
     async load(): Promise<void> {
         for (const entity of this.entities) {
             await entity.load();

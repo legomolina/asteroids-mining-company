@@ -2,7 +2,7 @@ import type { ICollidable } from '../entities/ICollidable';
 import { type Circle, type Polygon } from 'pixi.js';
 import CollisionTester from '../core/collisions/CollisionTester';
 
-export class CollisionsManager {
+export default class CollisionsManager {
     private collidables: ICollidable[];
 
     constructor() {

@@ -3,25 +3,25 @@ import type Stage from '../core/Stage';
 import GameWorld from '../stages/GameWorld';
 import PauseMenu from '../stages/PauseMenu';
 import GameOver from '../stages/GameOver';
+import MainMenu from '../stages/MainMenu';
 
-type StageType = 'gameWorld' | 'pauseMenu' | 'gameOver';
+type StageType = 'mainMenu' | 'gameWorld' | 'pauseMenu' | 'gameOver';
 
 export default class StageManager {
     private stages: Stage[] = [];
 
-    private readonly gameWorld: GameWorld;
-    private readonly pauseMenu: PauseMenu;
-    private readonly gameOver: GameOver;
+    static stages: Readonly<Record<StageType, Stage>>;
 
     constructor(private stage: Container<ContainerChild>, renderer: Renderer) {
-        this.gameWorld = new GameWorld(renderer, this);
-        this.pauseMenu = new PauseMenu(renderer, this);
-        this.gameOver = new GameOver(renderer, this);
+        StageManager.stages = {
+            mainMenu: new MainMenu(renderer, this),
+            gameWorld: new GameWorld(renderer, this),
+            pauseMenu: new PauseMenu(renderer, this),
+            gameOver: new GameOver(renderer, this),
+        };
     }
 
-    addStage(stageType: StageType): void {
-        const stage = this.getStage(stageType);
-
+    addStage(stage: Stage): void {
         if (stage.isLoaded) {
             this.loadStage(stage);
         } else {
@@ -47,19 +47,9 @@ export default class StageManager {
         return this.stages.at(-1);
     }
 
-    private loadStage(stage: Stage): void {
+    private async loadStage(stage: Stage): Promise<void> {
+        await stage.initialize();
         this.stages.push(stage);
         this.stage.addChild(stage.container);
-    }
-
-    private getStage(stageType: StageType): Stage {
-        switch (stageType) {
-            case 'gameWorld':
-                return this.gameWorld;
-            case 'pauseMenu':
-                return this.pauseMenu;
-            case 'gameOver':
-                return this.gameOver;
-        }
     }
 }

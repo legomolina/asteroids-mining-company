@@ -4,7 +4,7 @@ import Vector2 from '../../core/math/Vector2';
 import MathUtils from '../../core/math/MathUtils';
 import { Point, type Renderer } from 'pixi.js';
 import Bullet from './Bullet';
-import type { CollisionsManager } from '../../managers/CollisionsManager';
+import type CollisionsManager from '../../managers/CollisionsManager';
 
 export default class PlayerController {
     private readonly inputManager: InputManager;
